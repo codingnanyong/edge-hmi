@@ -4,8 +4,7 @@ FastAPI + SQLAlchemy. 테이블별 단일 API(각각 컨테이너) + **hmi-api �
 
 ## 구조
 
-```bash
-
+```text
 api/
 ├── shared/           # config, DB, models (core.*)
 ├── line_mst/         # 테이블 전용 FastAPI, Dockerfile → 별도 컨테이너

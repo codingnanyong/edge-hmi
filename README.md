@@ -4,7 +4,7 @@ Edge HMI 모니터링·유지보수 시스템. DB + API 구성.
 
 ## 구조
 
-```bash
+```text
 edge-hmi/
 ├── README.md         # 이 파일
 ├── docker-compose.yml # DB + 테이블별 API + hmi-api 게이트웨이 (컨테이너 간 연관)
@@ -33,7 +33,7 @@ edge-hmi/
 
 ## 빠른 실행
 
-**DB만**
+### **DB만**
 
 ```bash
 cd db
@@ -59,6 +59,7 @@ docker compose up -d --build
 - **기본 브랜치**: `main`
 
 **브랜치 작업 흐름** (기능/수정 시):
+
 ```bash
 git checkout main && git pull
 git checkout -b feature/이슈명   # 예: feature/api-auth, fix/db-init
