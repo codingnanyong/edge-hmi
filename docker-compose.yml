@@ -16,7 +16,7 @@ services:
       - TZ=${TZ:-Asia/Seoul}
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -40,7 +40,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8001:8000"
@@ -61,7 +61,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8002:8000"
@@ -82,7 +82,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8003:8000"
@@ -103,7 +103,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8004:8000"
@@ -124,7 +124,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8005:8000"
@@ -145,7 +145,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8006:8000"
@@ -166,7 +166,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8007:8000"
@@ -187,7 +187,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8008:8000"
@@ -208,7 +208,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8009:8000"
@@ -229,7 +229,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8010:8000"
@@ -250,7 +250,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8011:8000"
@@ -271,7 +271,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8012:8000"
@@ -313,7 +313,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8014:8000"
@@ -334,7 +334,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
       - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_SCHEMA=core
     ports:
       - "8015:8000"
