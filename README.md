@@ -1,18 +1,24 @@
 # Edge HMI
 
-Edge HMI 모니터링·유지보수 시스템. DB + API 구성.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-336791?logo=postgresql&logoColor=white)](https://www.timescale.com/)
 
-## 구조
+Edge HMI monitoring and maintenance system. DB + API architecture.
+
+## Structure
 
 ```text
 edge-hmi/
-├── README.md         # 이 파일
-├── docker-compose.yml # DB + 테이블별 API + hmi-api 게이트웨이 (컨테이너 간 연관)
-├── db/               # TimescaleDB (스키마, KPI 스케줄러)
+├── README.md         # This file
+├── docker-compose.yml # DB + per-table APIs + hmi-api gateway (container links)
+├── db/               # TimescaleDB (schema, KPI scheduler)
 │   └── README.md
 └── api/              # FastAPI + SQLAlchemy
     ├── shared/       # config, DB, models
-    ├── line_mst/     # 테이블별 API (각각 컨테이너)
+    ├── line_mst/     # Per-table API (each as a container)
     ├── equip_mst/
     ├── sensor_mst/
     ├── worker_mst/
@@ -27,49 +33,49 @@ edge-hmi/
     ├── maint_his/
     ├── shift_map/
     ├── kpi_sum/
-    ├── hmi_api/      # 게이트웨이: 테이블 API 컨테이너로 프록시
+    ├── hmi_api/      # Gateway: proxies to table API containers
     └── README.md
 ```
 
-## 빠른 실행
+## Quick Start
 
-### **DB만**
+### **DB only**
 
 ```bash
 cd db
-# .env 생성 (POSTGRES_*, POSTGRES_SCHEMA=core, TZ). db/README.md 참고
+# Create .env (POSTGRES_*, POSTGRES_SCHEMA=core, TZ). See db/README.md
 docker compose up -d
 ```
 
-**DB + 테이블별 API + hmi-api 게이트웨이** (프로젝트 루트)
+**DB + per-table APIs + hmi-api gateway** (project root)
 
 ```bash
-# db/.env 필요
+# db/.env required
 docker compose up -d --build
 ```
 
-- DB: 5432, hmi-api(통합): 8000, line_mst: 8001 … kpi_sum: 8004, worker_mst: 8005 … shift_map: 8015 (api/README.md 참고)
+- DB: 5432, hmi-api (gateway): 8000, line_mst: 8001 … kpi_sum: 8004, worker_mst: 8005 … shift_map: 8015 (see api/README.md)
 
-**API 상세**
-→ `api/README.md` 참고.
+**API details**  
+→ See `api/README.md`.
 
-## Git 저장소
+## Git Repository
 
-- **원격**: `http://<GITEA_HOST>:3000/<namespace>/edge-hmi.git`
-- **기본 브랜치**: `main`
+- **Remote**: `http://<GITEA_HOST>:3000/<namespace>/edge-hmi.git`
+- **Default branch**: `main`
 
-**브랜치 작업 흐름** (기능/수정 시):
+**Branch workflow** (for features/fixes):
 
 ```bash
 git checkout main && git pull
-git checkout -b feature/이슈명   # 예: feature/api-auth, fix/db-init
-# 작업 후
-git add -A && git commit -m "메시지"
-git push -u origin feature/이슈명
-# 원격에서 MR/PR 생성 → main 머지
+git checkout -b feature/issue-name   # e.g. feature/api-auth, fix/db-init
+# After changes
+git add -A && git commit -m "message"
+git push -u origin feature/issue-name
+# Open MR/PR on remote → merge to main
 ```
 
 ---
 
-- DB 상세: **db/README.md**
-- API 상세: **api/README.md**
+- DB details: **db/README.md**
+- API details: **api/README.md**
