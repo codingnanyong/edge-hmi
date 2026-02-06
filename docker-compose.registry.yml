@@ -1,15 +1,11 @@
-# Edge HMI: DB + table APIs + hmi-api gateway
-# Run: docker compose up -d --build  (local build only, no pull)
-# DB .env: db/.env (POSTGRES_DB, USER, PASSWORD, SCHEMA)
+# Edge HMI: Private Registry 이미지 사용
+# 사용: REGISTRY=<REGISTRY_HOST>:<PORT> IMAGE_TAG=v1.0.2 docker compose -f docker-compose.registry.yml up -d
+# db/.env 필요 (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD)
 name: edge-hmi
 
 services:
   db:
-    build:
-      context: ./db
-      dockerfile: dockerfile
-    image: btx/edge-hmi-db:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-db:${IMAGE_TAG:-latest}
     container_name: hmi-db-postgres
     env_file: ./db/.env
     environment:
@@ -28,11 +24,7 @@ services:
       retries: 5
 
   line_mst:
-    build:
-      context: ./api
-      dockerfile: line_mst/Dockerfile
-    image: btx/edge-hmi-api-line-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-line-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-line-mst
     env_file: ./db/.env
     environment:
@@ -49,11 +41,7 @@ services:
         condition: service_healthy
 
   equip_mst:
-    build:
-      context: ./api
-      dockerfile: equip_mst/Dockerfile
-    image: btx/edge-hmi-api-equip-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-equip-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-equip-mst
     env_file: ./db/.env
     environment:
@@ -70,11 +58,7 @@ services:
         condition: service_healthy
 
   sensor_mst:
-    build:
-      context: ./api
-      dockerfile: sensor_mst/Dockerfile
-    image: btx/edge-hmi-api-sensor-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-sensor-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-sensor-mst
     env_file: ./db/.env
     environment:
@@ -91,11 +75,7 @@ services:
         condition: service_healthy
 
   kpi_sum:
-    build:
-      context: ./api
-      dockerfile: kpi_sum/Dockerfile
-    image: btx/edge-hmi-api-kpi-sum:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-sum:${IMAGE_TAG:-latest}
     container_name: hmi-api-kpi-sum
     env_file: ./db/.env
     environment:
@@ -112,11 +92,7 @@ services:
         condition: service_healthy
 
   worker_mst:
-    build:
-      context: ./api
-      dockerfile: worker_mst/Dockerfile
-    image: btx/edge-hmi-api-worker-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-worker-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-worker-mst
     env_file: ./db/.env
     environment:
@@ -133,11 +109,7 @@ services:
         condition: service_healthy
 
   shift_cfg:
-    build:
-      context: ./api
-      dockerfile: shift_cfg/Dockerfile
-    image: btx/edge-hmi-api-shift-cfg:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-cfg:${IMAGE_TAG:-latest}
     container_name: hmi-api-shift-cfg
     env_file: ./db/.env
     environment:
@@ -154,11 +126,7 @@ services:
         condition: service_healthy
 
   kpi_cfg:
-    build:
-      context: ./api
-      dockerfile: kpi_cfg/Dockerfile
-    image: btx/edge-hmi-api-kpi-cfg:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-cfg:${IMAGE_TAG:-latest}
     container_name: hmi-api-kpi-cfg
     env_file: ./db/.env
     environment:
@@ -175,11 +143,7 @@ services:
         condition: service_healthy
 
   alarm_cfg:
-    build:
-      context: ./api
-      dockerfile: alarm_cfg/Dockerfile
-    image: btx/edge-hmi-api-alarm-cfg:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-cfg:${IMAGE_TAG:-latest}
     container_name: hmi-api-alarm-cfg
     env_file: ./db/.env
     environment:
@@ -196,11 +160,7 @@ services:
         condition: service_healthy
 
   maint_cfg:
-    build:
-      context: ./api
-      dockerfile: maint_cfg/Dockerfile
-    image: btx/edge-hmi-api-maint-cfg:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-cfg:${IMAGE_TAG:-latest}
     container_name: hmi-api-maint-cfg
     env_file: ./db/.env
     environment:
@@ -217,11 +177,7 @@ services:
         condition: service_healthy
 
   work_order:
-    build:
-      context: ./api
-      dockerfile: work_order/Dockerfile
-    image: btx/edge-hmi-api-work-order:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-work-order:${IMAGE_TAG:-latest}
     container_name: hmi-api-work-order
     env_file: ./db/.env
     environment:
@@ -238,11 +194,7 @@ services:
         condition: service_healthy
 
   parts_mst:
-    build:
-      context: ./api
-      dockerfile: parts_mst/Dockerfile
-    image: btx/edge-hmi-api-parts-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-parts-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-parts-mst
     env_file: ./db/.env
     environment:
@@ -259,11 +211,7 @@ services:
         condition: service_healthy
 
   defect_code_mst:
-    build:
-      context: ./api
-      dockerfile: defect_code_mst/Dockerfile
-    image: btx/edge-hmi-api-defect-code-mst:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-code-mst:${IMAGE_TAG:-latest}
     container_name: hmi-api-defect-code-mst
     env_file: ./db/.env
     environment:
@@ -280,11 +228,7 @@ services:
         condition: service_healthy
 
   measurement:
-    build:
-      context: ./api
-      dockerfile: measurement/Dockerfile
-    image: btx/edge-hmi-api-measurement:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-measurement:${IMAGE_TAG:-latest}
     container_name: hmi-api-measurement
     env_file: ./db/.env
     environment:
@@ -301,11 +245,7 @@ services:
         condition: service_healthy
 
   status_his:
-    build:
-      context: ./api
-      dockerfile: status_his/Dockerfile
-    image: btx/edge-hmi-api-status-his:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-status-his:${IMAGE_TAG:-latest}
     container_name: hmi-api-status-his
     env_file: ./db/.env
     environment:
@@ -322,11 +262,7 @@ services:
         condition: service_healthy
 
   prod_his:
-    build:
-      context: ./api
-      dockerfile: prod_his/Dockerfile
-    image: btx/edge-hmi-api-prod-his:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-prod-his:${IMAGE_TAG:-latest}
     container_name: hmi-api-prod-his
     env_file: ./db/.env
     environment:
@@ -343,11 +279,7 @@ services:
         condition: service_healthy
 
   defect_his:
-    build:
-      context: ./api
-      dockerfile: defect_his/Dockerfile
-    image: btx/edge-hmi-api-defect-his:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-his:${IMAGE_TAG:-latest}
     container_name: hmi-api-defect-his
     env_file: ./db/.env
     environment:
@@ -364,11 +296,7 @@ services:
         condition: service_healthy
 
   alarm_his:
-    build:
-      context: ./api
-      dockerfile: alarm_his/Dockerfile
-    image: btx/edge-hmi-api-alarm-his:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-his:${IMAGE_TAG:-latest}
     container_name: hmi-api-alarm-his
     env_file: ./db/.env
     environment:
@@ -385,11 +313,7 @@ services:
         condition: service_healthy
 
   maint_his:
-    build:
-      context: ./api
-      dockerfile: maint_his/Dockerfile
-    image: btx/edge-hmi-api-maint-his:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-his:${IMAGE_TAG:-latest}
     container_name: hmi-api-maint-his
     env_file: ./db/.env
     environment:
@@ -406,11 +330,7 @@ services:
         condition: service_healthy
 
   shift_map:
-    build:
-      context: ./api
-      dockerfile: shift_map/Dockerfile
-    image: btx/edge-hmi-api-shift-map:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-map:${IMAGE_TAG:-latest}
     container_name: hmi-api-shift-map
     env_file: ./db/.env
     environment:
@@ -427,17 +347,16 @@ services:
         condition: service_healthy
 
   hmi-api:
-    build:
-      context: ./api
-      dockerfile: hmi_api/Dockerfile
-    image: btx/edge-hmi-api:latest
-    pull_policy: never
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api:${IMAGE_TAG:-latest}
     container_name: hmi-api
     environment:
       - TABLE_SERVICE_PORT=8000
     ports:
       - "8000:8000"
-    # depends_on omitted: table API composition varies per site/env. Gateway proxies available services only
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   edge_hmi_data:
+
