@@ -6,10 +6,10 @@ set -e
 # ============================================================================
 # Pushes both [tag] and latest; latest is always updated to this build.
 # Usage: ./scripts/push-to-registry.sh [registry-url] [tag]
-# Example: ./scripts/push-to-registry.sh <REGISTRY_HOST>:5000 v1.0
+# Example: ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0
 # ============================================================================
 
-REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:5000 [tag]}"
+REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [tag]}"
 IMAGE_TAG="${2:-latest}"
 IMAGE_NAME="btx/edge-hmi-db"
 FULL_IMAGE="${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
@@ -63,6 +63,13 @@ if [ "${IMAGE_TAG}" != "latest" ]; then
     echo "✅ Pushed: ${LATEST_IMAGE} (always updated)"
 fi
 echo "============================================================================"
+echo ""
+echo "🗑️  Rmi local images..."
+docker rmi "${FULL_IMAGE}" 2>/dev/null || true
+if [ "${IMAGE_TAG}" != "latest" ]; then
+    docker rmi "${LATEST_IMAGE}" 2>/dev/null || true
+fi
+echo "✅ Local images removed"
 echo ""
 echo "Pull: docker pull ${FULL_IMAGE}"
 echo "      docker pull ${LATEST_IMAGE}"
