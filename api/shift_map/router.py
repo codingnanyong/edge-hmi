@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from shared.deps import get_db
 from shared.models import ShiftMap as ShiftMapModel
 
-from shift_map.schemas import ShiftMapCreate, ShiftMapRead
+from shift_map.schemas import ShiftMapCreate, ShiftMapRead, ShiftMapUpdate
 
 router = APIRouter(prefix="/shift_map", tags=["shift_map"])
 
@@ -27,7 +27,7 @@ def list_(
         q = q.filter(ShiftMapModel.line_id == line_id)
     if worker_id is not None:
         q = q.filter(ShiftMapModel.worker_id == worker_id)
-    return q.order_by(ShiftMapModel.work_date.desc()).offset(skip).limit(limit).all()
+    return q.order_by(ShiftMapModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=ShiftMapRead)
@@ -51,3 +51,25 @@ def create(p: ShiftMapCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(row)
     return row
+
+
+@router.patch("/{id}", response_model=ShiftMapRead)
+def update(id: int, p: ShiftMapUpdate, db: Session = Depends(get_db)):
+    row = db.get(ShiftMapModel, id)
+    if not row:
+        raise HTTPException(404, "shift_map not found")
+    for k, v in p.model_dump(exclude_unset=True).items():
+        setattr(row, k, v)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.delete("/{id}", status_code=204)
+def delete(id: int, db: Session = Depends(get_db)):
+    row = db.get(ShiftMapModel, id)
+    if not row:
+        raise HTTPException(404, "shift_map not found")
+    db.delete(row)
+    db.commit()
+    return None

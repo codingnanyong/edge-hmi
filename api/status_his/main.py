@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from status_his.router import router
 
-app = FastAPI(title="edge-hmi status_his API", version="0.1.0")
+app = FastAPI(title="edge-hmi status_his API", version="1.0.1")
 app.include_router(router)
 
 

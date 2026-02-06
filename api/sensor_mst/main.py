@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from sensor_mst.router import router
 
-app = FastAPI(title="edge-hmi sensor_mst API", version="0.1.0")
+app = FastAPI(title="edge-hmi sensor_mst API", version="1.0.1")
 app.include_router(router)
 
 

@@ -5,20 +5,23 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from hmi_api.config import TABLE_SERVICES, settings
+from hmi_api.config import APP_VERSION, TABLE_SERVICES, settings
 from hmi_api.proxy import fetch_openapi, proxy_to_table
 
 app = FastAPI(
     title="Edge HMI API",
     description="게이트웨이: line_mst, equip_mst 등 테이블 API 컨테이너로 프록시",
-    version="1.0.1",
+    version=APP_VERSION,
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
 
 _STATIC = Path(__file__).parent / "static"
-_SWAGGER_UI = _STATIC / "swagger-ui.html"
+_HTML_PAGES = {
+    "swagger": _STATIC / "html" / "swagger-ui.html",
+    "feature_usage": _STATIC / "html" / "feature-usage.html",
+}
 
 app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
 
@@ -26,19 +29,25 @@ app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
 @app.get("/")
 async def root():
     """루트 = Felt Montrg 스타일 통합 Swagger UI (Docker-compose)."""
-    return FileResponse(_SWAGGER_UI, media_type="text/html")
+    return FileResponse(_HTML_PAGES["swagger"], media_type="text/html")
 
 
 @app.get("/swagger", include_in_schema=False)
 async def swagger_alias():
     """Swagger UI 별칭."""
-    return FileResponse(_SWAGGER_UI, media_type="text/html")
+    return FileResponse(_HTML_PAGES["swagger"], media_type="text/html")
 
 
 @app.get("/docs", include_in_schema=False)
 async def docs_redirect():
     """FastAPI 기본 docs → Swagger UI 리다이렉트."""
     return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/feature-usage", include_in_schema=False)
+async def feature_usage():
+    """Feature API usage guide (FEATURE-USAGE.md rendered as HTML)."""
+    return FileResponse(_HTML_PAGES["feature_usage"], media_type="text/html")
 
 
 @app.get("/health")
@@ -51,7 +60,7 @@ async def service_info():
     """서비스 정보 (기존 동작 서비스 /info 패턴)."""
     return {
         "service": "Edge HMI API Gateway",
-        "version": "1.0.1",
+        "version": APP_VERSION,
         "status": "running",
         "swagger_ui_url": "/",
         "integrated_api_docs": "/openapi.json",
@@ -60,6 +69,7 @@ async def service_info():
         "available_endpoints": {
             "/": "Swagger UI (main)",
             "/swagger": "Swagger UI (alias)",
+            "/feature-usage": "Feature API usage guide",
             "/info": "Service information",
             "/openapi.json": "OpenAPI specification",
             "/health": "Health check",
@@ -98,8 +108,8 @@ async def openapi_aggregated():
         "openapi": "3.0.3",
         "x-source": "gateway-aggregated",
         "info": {
-            "title": "Edge HMI API",
-            "version": "1.0.1",
+            "title": "🏭 Edge HMI API Documentation",
+            "version": APP_VERSION,
             "description": f"게이트웨이 (테이블 API 프록시). Total {len(tags)} tables integrated.",
         },
         "paths": paths,

@@ -11,7 +11,7 @@ router = APIRouter(prefix="/equip_mst", tags=["equip_mst"])
 
 @router.get("", response_model=list[EquipMstRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(EquipMstModel).offset(skip).limit(limit).all()
+    return db.query(EquipMstModel).order_by(EquipMstModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=EquipMstRead)
@@ -24,7 +24,13 @@ def get(id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=EquipMstRead, status_code=201)
 def create(p: EquipMstCreate, db: Session = Depends(get_db)):
-    row = EquipMstModel(line_id=p.line_id, equip_code=p.equip_code, name=p.name, type=p.type)
+    row = EquipMstModel(
+        line_id=p.line_id,
+        equip_code=p.equip_code,
+        name=p.name,
+        type=p.type,
+        install_date=p.install_date,
+    )
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -44,6 +50,8 @@ def update(id: int, p: EquipMstUpdate, db: Session = Depends(get_db)):
         row.name = p.name
     if p.type is not None:
         row.type = p.type
+    if p.install_date is not None:
+        row.install_date = p.install_date
     db.commit()
     db.refresh(row)
     return row

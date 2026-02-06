@@ -11,7 +11,7 @@ router = APIRouter(prefix="/maint_cfg", tags=["maint_cfg"])
 
 @router.get("", response_model=list[MaintCfgRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(MaintCfgModel).offset(skip).limit(limit).all()
+    return db.query(MaintCfgModel).order_by(MaintCfgModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=MaintCfgRead)

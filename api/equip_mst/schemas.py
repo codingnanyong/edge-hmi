@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -6,6 +8,7 @@ class EquipMstBase(BaseModel):
     equip_code: str
     name: str
     type: str | None = None
+    install_date: date | None = None
 
 
 class EquipMstCreate(EquipMstBase):
@@ -17,6 +20,7 @@ class EquipMstUpdate(BaseModel):
     equip_code: str | None = None
     name: str | None = None
     type: str | None = None
+    install_date: date | None = None
 
 
 class EquipMstRead(EquipMstBase):

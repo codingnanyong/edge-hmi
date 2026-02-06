@@ -11,7 +11,7 @@ router = APIRouter(prefix="/shift_cfg", tags=["shift_cfg"])
 
 @router.get("", response_model=list[ShiftCfgRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(ShiftCfgModel).offset(skip).limit(limit).all()
+    return db.query(ShiftCfgModel).order_by(ShiftCfgModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=ShiftCfgRead)

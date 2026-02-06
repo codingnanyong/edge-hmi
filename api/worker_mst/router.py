@@ -11,7 +11,7 @@ router = APIRouter(prefix="/worker_mst", tags=["worker_mst"])
 
 @router.get("", response_model=list[WorkerMstRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(WorkerMstModel).offset(skip).limit(limit).all()
+    return db.query(WorkerMstModel).order_by(WorkerMstModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=WorkerMstRead)
