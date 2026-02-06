@@ -5,6 +5,7 @@ function initSwaggerUI(specUrl, title) {
   const ui = SwaggerUIBundle({
     url: specUrl,
     dom_id: '#swagger-ui',
+    documentTitle: title || 'Edge HMI API Documentation',
     deepLinking: true,
     presets: [
       SwaggerUIBundle.presets.apis,
@@ -15,7 +16,7 @@ function initSwaggerUI(specUrl, title) {
     displayOperationId: false,
     showExtensions: false,
     tryItOutEnabled: true,
-    docExpansion: 'list',
+    docExpansion: 'none',
     requestInterceptor: createRequestInterceptor(),
     onComplete: () => {
       setTimeout(() => {

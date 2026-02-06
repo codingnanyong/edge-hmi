@@ -26,7 +26,8 @@ function updateDefaultSwaggerHeader() {
     const tags = serviceNames.length
       ? serviceNames.map(s => `<span class="service-tag">${s}</span>`).join('')
       : 'Loading...';
-    div.innerHTML = `<p style="margin:0;text-align:center;width:100%"><strong>Included services:</strong> <span class="service-tags-container">${tags}</span></p>`;
+    const featLink = '<a href="/feature-usage" class="feat-usage-badge">Feature Usage Guide →</a>';
+    div.innerHTML = `<p class="included-services-row"><strong>Included services:</strong> <span class="service-tags-container">${tags}</span></p><div class="feat-usage-wrap">${featLink}</div>`;
 
     if (desc) desc.insertAdjacentElement('afterend', div);
     else info.querySelector('.title')?.insertAdjacentElement('afterend', div);

@@ -13,12 +13,11 @@ set -e
 #   ./scripts/push-to-registry.sh [registry-url] [version] line_mst sensor_mst hmi-api  # push several
 #
 # Examples:
-#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:5000 v1.0
-#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:5000 v1.0 hmi-api
-#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:5000 v1.0 line_mst equip_mst
+#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0
+#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0 hmi-api
 # ============================================================================
 
-REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:5000 [version] [services...]}"
+REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [version] [service ...]}"
 VERSION="${2:-v1.0}"
 if [ $# -ge 2 ]; then
   shift 2
@@ -46,9 +45,13 @@ declare -A API_MAP=(
   [maint_his]="maint_his/Dockerfile:btx/edge-hmi-api-maint-his"
   [shift_map]="shift_map/Dockerfile:btx/edge-hmi-api-shift-map"
   [hmi-api]="hmi_api/Dockerfile:btx/edge-hmi-api"
+  [work_order]="work_order/Dockerfile:btx/edge-hmi-api-work-order"
+  [defect_code_mst]="defect_code_mst/Dockerfile:btx/edge-hmi-api-defect-code-mst"
+  [defect_his]="defect_his/Dockerfile:btx/edge-hmi-api-defect-his"
+  [parts_mst]="parts_mst/Dockerfile:btx/edge-hmi-api-parts-mst"
 )
 
-ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg measurement status_his prod_his alarm_his maint_his shift_map hmi-api)
+ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg work_order measurement status_his prod_his alarm_his maint_his shift_map defect_code_mst defect_his parts_mst hmi-api)
 
 resolve_targets() {
   if [ ${#REQUESTED[@]} -eq 0 ]; then
@@ -106,6 +109,8 @@ push_one() {
   docker push "${full_image}" || { echo "❌ Push failed. Try: docker login ${REGISTRY_URL}"; return 1; }
   echo "📤 Push: ${latest_image}"
   docker push "${latest_image}" || { echo "❌ Push latest failed"; return 1; }
+  echo "🗑️  Rmi local: ${image_name}"
+  docker rmi "${full_image}" "${latest_image}" 2>/dev/null || true
   echo "✅ ${image_name} done"
   echo ""
 }
@@ -118,6 +123,10 @@ done
 echo "============================================================================"
 echo "✅ Pushed ${#TARGETS[@]} image(s): ${VERSION} + latest"
 echo "============================================================================"
+echo ""
+echo "🧹 Docker build cache prune..."
+docker builder prune -af
+echo "✅ Cache cleared"
 echo ""
 echo "Pull examples:"
 echo "  docker pull ${REGISTRY_URL}/btx/edge-hmi-api:${VERSION}"

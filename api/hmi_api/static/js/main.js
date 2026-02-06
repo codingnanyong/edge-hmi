@@ -27,7 +27,7 @@ async function initializeApp() {
   }
 
   try {
-    AppState.swaggerUI = initSwaggerUI('/openapi.json', 'Edge HMI API Documentation');
+    AppState.swaggerUI = initSwaggerUI('/openapi.json', '🏭 Edge HMI API Documentation');
   } catch (e) {
     console.error('Swagger UI init failed:', e);
     showError('Swagger UI 초기화 실패: ' + (e.message || String(e)));

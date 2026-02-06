@@ -11,7 +11,7 @@ router = APIRouter(prefix="/kpi_cfg", tags=["kpi_cfg"])
 
 @router.get("", response_model=list[KpiCfgRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(KpiCfgModel).offset(skip).limit(limit).all()
+    return db.query(KpiCfgModel).order_by(KpiCfgModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=KpiCfgRead)

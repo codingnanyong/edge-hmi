@@ -11,7 +11,7 @@ router = APIRouter(prefix="/alarm_cfg", tags=["alarm_cfg"])
 
 @router.get("", response_model=list[AlarmCfgRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(AlarmCfgModel).offset(skip).limit(limit).all()
+    return db.query(AlarmCfgModel).order_by(AlarmCfgModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=AlarmCfgRead)

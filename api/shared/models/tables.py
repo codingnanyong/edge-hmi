@@ -3,6 +3,7 @@ from datetime import date, datetime, time
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Date,
     DateTime,
     Float,
@@ -24,6 +25,7 @@ class LineMst(Base):
     __table_args__ = {"schema": SCHEMA}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    process_type: Mapped[str | None] = mapped_column(String(50))
     line_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     line_name: Mapped[str | None] = mapped_column(String(200))
 
@@ -37,6 +39,7 @@ class EquipMst(Base):
     equip_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     type: Mapped[str | None] = mapped_column(String(100))
+    install_date: Mapped[date | None] = mapped_column(Date)
 
 
 class SensorMst(Base):
@@ -51,6 +54,7 @@ class SensorMst(Base):
     usl_val: Mapped[float | None] = mapped_column(Float)
     lcl_val: Mapped[float | None] = mapped_column(Float)
     ucl_val: Mapped[float | None] = mapped_column(Float)
+    is_golden_standard: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class WorkerMst(Base):
@@ -104,6 +108,43 @@ class MaintCfg(Base):
     description: Mapped[str | None] = mapped_column(Text)
 
 
+class WorkOrder(Base):
+    __tablename__ = "work_order"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    order_no: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    model_name: Mapped[str | None] = mapped_column(String(200))
+    target_cnt: Mapped[int | None] = mapped_column(Integer)
+    sop_link: Mapped[str | None] = mapped_column(String(500))
+    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PartsMst(Base):
+    __tablename__ = "parts_mst"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    equip_id: Mapped[int] = mapped_column(
+        ForeignKey(f"{SCHEMA}.equip_mst.id", ondelete="CASCADE"), nullable=False
+    )
+    part_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    spec_lifespan_hours: Mapped[float | None] = mapped_column(Float)
+    current_usage_hours: Mapped[float] = mapped_column(Float, default=0)
+    last_replacement_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class DefectCodeMst(Base):
+    __tablename__ = "defect_code_mst"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    defect_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    reason_name: Mapped[str | None] = mapped_column(String(200))
+    category: Mapped[str | None] = mapped_column(String(100))
+
+
 class Measurement(Base):
     __tablename__ = "measurement"
     __table_args__ = {"schema": SCHEMA}
@@ -136,9 +177,26 @@ class ProdHis(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     time: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True, nullable=False)
     equip_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.equip_mst.id", ondelete="RESTRICT"), nullable=False)
+    work_order_id: Mapped[int | None] = mapped_column(
+        ForeignKey(f"{SCHEMA}.work_order.id", ondelete="SET NULL")
+    )
     total_cnt: Mapped[int] = mapped_column(Integer, default=0)
     good_cnt: Mapped[int] = mapped_column(Integer, default=0)
     defect_cnt: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class DefectHis(Base):
+    __tablename__ = "defect_his"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    prod_his_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey(f"{SCHEMA}.prod_his.id", ondelete="CASCADE"), nullable=False
+    )
+    defect_code_id: Mapped[int] = mapped_column(
+        ForeignKey(f"{SCHEMA}.defect_code_mst.id", ondelete="RESTRICT"), nullable=False
+    )
+    defect_qty: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class AlarmHis(Base):
@@ -164,6 +222,7 @@ class MaintHis(Base):
     maint_def_id: Mapped[int] = mapped_column(
         ForeignKey(f"{SCHEMA}.maint_cfg.id", ondelete="RESTRICT"), nullable=False
     )
+    part_id: Mapped[int | None] = mapped_column(ForeignKey(f"{SCHEMA}.parts_mst.id", ondelete="SET NULL"))
     alarm_his_id: Mapped[int | None] = mapped_column(
         ForeignKey(f"{SCHEMA}.alarm_his.id", ondelete="SET NULL"), unique=True
     )
@@ -196,9 +255,11 @@ class KpiSum(Base):
     shift_def_id: Mapped[int | None] = mapped_column(ForeignKey(f"{SCHEMA}.shift_cfg.id", ondelete="SET NULL"))
     line_id: Mapped[int | None] = mapped_column(ForeignKey(f"{SCHEMA}.line_mst.id", ondelete="SET NULL"))
     equip_id: Mapped[int | None] = mapped_column(ForeignKey(f"{SCHEMA}.equip_mst.id", ondelete="SET NULL"))
+    work_order_id: Mapped[int | None] = mapped_column(ForeignKey(f"{SCHEMA}.work_order.id", ondelete="SET NULL"))
     availability: Mapped[float | None] = mapped_column(Float)
     performance: Mapped[float | None] = mapped_column(Float)
     quality: Mapped[float | None] = mapped_column(Float)
     oee: Mapped[float | None] = mapped_column(Float)
     mttr: Mapped[float | None] = mapped_column(Float)
     mtbf: Mapped[float | None] = mapped_column(Float)
+    uph: Mapped[float | None] = mapped_column(Float)

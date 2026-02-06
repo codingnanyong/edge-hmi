@@ -16,3 +16,6 @@
 
 .footer-title { font-size: 1.2rem; font-weight: 600; color: #2d3748; margin: 0 0 8px 0; }
 .footer-credit { font-size: 0.85rem; color: #718096; margin: 0; }
+.footer-links { margin-top: 8px; }
+.footer-links a { color: #10b981; text-decoration: none; margin: 0 12px; }
+.footer-links a:hover { text-decoration: underline; }

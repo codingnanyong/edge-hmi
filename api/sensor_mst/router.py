@@ -11,7 +11,7 @@ router = APIRouter(prefix="/sensor_mst", tags=["sensor_mst"])
 
 @router.get("", response_model=list[SensorMstRead])
 def list_(db: Session = Depends(get_db), skip: int = 0, limit: int = Query(100, le=500)):
-    return db.query(SensorMstModel).offset(skip).limit(limit).all()
+    return db.query(SensorMstModel).order_by(SensorMstModel.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{id}", response_model=SensorMstRead)
@@ -32,6 +32,7 @@ def create(p: SensorMstCreate, db: Session = Depends(get_db)):
         usl_val=p.usl_val,
         lcl_val=p.lcl_val,
         ucl_val=p.ucl_val,
+        is_golden_standard=p.is_golden_standard,
     )
     db.add(row)
     db.commit()
