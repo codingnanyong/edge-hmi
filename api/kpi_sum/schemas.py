@@ -9,10 +9,12 @@ class KpiSumRead(BaseModel):
     shift_def_id: int | None
     line_id: int | None
     equip_id: int | None
+    work_order_id: int | None
     availability: float | None
     performance: float | None
     quality: float | None
     oee: float | None
     mttr: float | None
     mtbf: float | None
+    uph: float | None
     model_config = ConfigDict(from_attributes=True)

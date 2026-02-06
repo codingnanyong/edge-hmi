@@ -16,10 +16,10 @@ RUN apk add --no-cache build-base git postgresql16-dev && \
     cp pg_cron.so "$(pg_config --pkglibdir)/" && \
     rm -rf /tmp/pg_cron
 
-# 2. 환경 변수 (동일)
+# 2. 환경 변수 (동일). POSTGRES_PASSWORD must be set at runtime (e.g. docker-compose); no default.
 ENV POSTGRES_DB=${POSTGRES_DB:-edge_hmi} \
     POSTGRES_USER=${POSTGRES_USER:-admin} \
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r} \
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
     TZ=${TZ:-Asia/Seoul}
 
 # 3. PostgreSQL 설정 주입

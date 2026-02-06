@@ -9,6 +9,7 @@ class SensorMstBase(BaseModel):
     usl_val: float | None = None
     lcl_val: float | None = None
     ucl_val: float | None = None
+    is_golden_standard: bool = False
 
 
 class SensorMstCreate(SensorMstBase):
@@ -23,6 +24,7 @@ class SensorMstUpdate(BaseModel):
     usl_val: float | None = None
     lcl_val: float | None = None
     ucl_val: float | None = None
+    is_golden_standard: bool | None = None
 
 
 class SensorMstRead(SensorMstBase):

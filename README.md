@@ -1,45 +1,52 @@
-# Edge HMI
+# 🏭 Edge HMI
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-336791?logo=postgresql&logoColor=white)](https://www.timescale.com/)
+Edge HMI monitoring & maintenance system. DB + API architecture.
 
-Edge HMI monitoring and maintenance system. DB + API architecture.
-
-## Structure
+## 📁 Structure
 
 ```text
 edge-hmi/
-├── README.md         # This file
-├── docker-compose.yml # DB + per-table APIs + hmi-api gateway (container links)
-├── db/               # TimescaleDB (schema, KPI scheduler)
-│   └── README.md
-└── api/              # FastAPI + SQLAlchemy
-    ├── shared/       # config, DB, models
-    ├── line_mst/     # Per-table API (each as a container)
+├── README.md                    # This file
+├── FEATURE-USAGE.md             # Feature-to-API usage guide (reference doc)
+├── docker-compose.yml           # DB + table APIs + hmi-api gateway (container orchestration)
+├── docker-compose.registry.yml  # Private Registry images
+├── db/                          # TimescaleDB (schema, KPI scheduler)
+│   ├── README.md
+│   ├── dockerfile
+│   ├── sql/
+│   │   ├── init-db.sql
+│   │   └── kpi-scheduler.sql
+│   └── scripts/
+│       └── push-to-registry.sh
+├── api/                         # FastAPI + SQLAlchemy
+    ├── shared/                  # config, DB, models
+    ├── line_mst/                # Table APIs (each runs in a container)
     ├── equip_mst/
-    ├── sensor_mst/
-    ├── worker_mst/
-    ├── shift_cfg/
-    ├── kpi_cfg/
-    ├── alarm_cfg/
-    ├── maint_cfg/
-    ├── measurement/
-    ├── status_his/
-    ├── prod_his/
-    ├── alarm_his/
-    ├── maint_his/
-    ├── shift_map/
+    ├── … (work_order, parts_mst, defect_code_mst, defect_his, etc.)
     ├── kpi_sum/
-    ├── hmi_api/      # Gateway: proxies to table API containers
+    ├── hmi_api/                 # Gateway: proxies to table API containers
+    │   ├── static/
+    │   │   ├── html/            # swagger-ui, feature-usage, docs-ui
+    │   │   ├── css/
+    │   │   └── js/              # feature-usage-data.js, swagger-init, etc.
+    │   └── …
+    ├── scripts/
+    │   └── push-to-registry.sh
     └── README.md
+└── test/                       # Private Registry pull test
+    ├── README.md
+    ├── docker-compose.yml
+    ├── sql/
+    │   ├── 00-cleanup.sql
+    │   ├── 01-dummy-master.sql
+    │   └── 02-dummy-history.sql
+    └── scripts/
+        └── run-dummy.sh
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### **DB only**
+**DB only**
 
 ```bash
 cd db
@@ -47,35 +54,88 @@ cd db
 docker compose up -d
 ```
 
-**DB + per-table APIs + hmi-api gateway** (project root)
+**DB + table APIs + hmi-api gateway** (project root)
 
 ```bash
 # db/.env required
 docker compose up -d --build
 ```
 
-- DB: 5432, hmi-api (gateway): 8000, line_mst: 8001 … kpi_sum: 8004, worker_mst: 8005 … shift_map: 8015 (see api/README.md)
+- DB: 5432, **hmi-api (gateway): 8000** (Swagger UI `/`, Feature Usage `/feature-usage`), line_mst: 8001 … defect_his: 8019 (details → **api/README.md**)
 
-**API details**  
-→ See `api/README.md`.
+## 📤 Deployment (Private Registry)
 
-## Git Repository
-
-- **Remote**: `http://<GITEA_HOST>:3000/<namespace>/edge-hmi.git`
-- **Default branch**: `main`
-
-**Branch workflow** (for features/fixes):
+Use `api/scripts/push-to-registry.sh` to build and push API images to Private Registry.
 
 ```bash
-git checkout main && git pull
-git checkout -b feature/issue-name   # e.g. feature/api-auth, fix/db-init
-# After changes
-git add -A && git commit -m "message"
-git push -u origin feature/issue-name
-# Open MR/PR on remote → merge to main
+cd api
+./scripts/push-to-registry.sh [registry-url] [version]   # All
+./scripts/push-to-registry.sh [registry-url] [version] hmi-api line_mst   # Selected
 ```
+
+- **registry-url**: default `localhost`
+- **version**: default `v1.0`. `latest` is also updated with the same build
+- Local built images are rmi'd and build cache pruned after push
+
+Details & service list → **api/README.md**
+
+## 🧪 Test (Private Registry pull)
+
+Use `test/` to pull images from the registry and run with dummy data (no local build).
+
+```bash
+cd test
+cp .env.example .env   # edit if needed
+docker login localhost
+docker compose pull
+docker compose up -d
+./scripts/run-dummy.sh   # optional: load dummy data
+```
+
+- Gateway: [http://localhost:8000]
+- DB: localhost:5432
+
+Details → **test/README.md**
+
+## 🌐 Web UI (hmi-api gateway :8000)
+
+| Path | Description |
+| ------ | ------ |
+| `/` | Swagger UI (aggregated API docs) |
+| `/swagger` | Same as `/` |
+| `/feature-usage` | Feature API usage guide (how to use each feature) |
+| `/openapi.json` | Aggregated OpenAPI spec |
+
+## 📂 Git Repository
+
+- **Remote**: `http://{localhost}/{Repository}`
+- **Default branch**: `main`
+- **Integration branch**: `develop` (merge features, then PR to main)
+
+### **Branch workflow**
+
+```bash
+git checkout develop && git pull
+git checkout -b feature/issue-name   # e.g. feature/api-auth, fix/db-init
+# Work...
+git add -A && git commit -m "Message"
+git push -u origin feature/issue-name
+# Create PR on remote → merge to develop
+# Optionally develop → main PR merge
+```
+
+**Release (tag)** — after main merge
+
+```bash
+git checkout main && git pull origin main
+git tag -a {version} -m "Release {version}: Summary"
+git push origin{ version}
+```
+
+Create **Releases** from the tag on remote (Gitea, etc.) if desired.
 
 ---
 
-- DB details: **db/README.md**
-- API details: **api/README.md**
+- 📊 DB details: **db/README.md**
+- 🔌 API details: **api/README.md**
+- 🧪 Test (Registry pull): **test/README.md**

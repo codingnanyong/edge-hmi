@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from shift_map.router import router
 
-app = FastAPI(title="edge-hmi shift_map API", version="0.1.0")
+app = FastAPI(title="edge-hmi shift_map API", version="1.0.1")
 app.include_router(router)
 
 

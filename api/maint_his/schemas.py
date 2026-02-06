@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class MaintHisBase(BaseModel):
     equip_id: int
     maint_def_id: int
+    part_id: int | None = None
     alarm_his_id: int | None = None
     worker_id: int | None = None
     start_time: datetime
