@@ -114,19 +114,21 @@ BEGIN
       mtbf_hr := NULL;
     END IF;
 
+    -- UPH (Units Per Hour): good_cnt per planned shift hour
     INSERT INTO kpi_sum (
       calc_date, shift_def_id, line_id, equip_id,
-      availability, performance, quality, oee, mttr, mtbf
+      availability, performance, quality, oee, mttr, mtbf, uph
     ) VALUES (
       p_calc_date, r.shift_def_id, r.line_id, r.equip_id,
       avail, perf, qual, avail * perf * qual,
-      mttr_sec, mtbf_hr
+      mttr_sec, mtbf_hr,
+      CASE WHEN planned_sec > 0 THEN good_cnt::FLOAT * 3600.0 / planned_sec ELSE NULL END
     );
   END LOOP;
 END;
 $$;
 
-COMMENT ON FUNCTION fn_kpi_sum_calc(DATE) IS 'Compute KPI (availability, performance, quality, OEE, MTTR, MTBF) per shift/line/equip for given date and upsert into kpi_sum.';
+COMMENT ON FUNCTION fn_kpi_sum_calc(DATE) IS 'Compute KPI (availability, performance, quality, OEE, MTTR, MTBF, UPH) per shift/line/equip for given date and upsert into kpi_sum.';
 
 -- ----------------------------------------------------------------------------
 -- [2. pg_cron extension and schedule]

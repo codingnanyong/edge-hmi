@@ -45,10 +45,12 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON SEQUENCES TO CURRENT_USER;
 -- 1.1 Line master
 CREATE TABLE IF NOT EXISTS line_mst (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    process_type VARCHAR(50),
     line_code VARCHAR(50) UNIQUE NOT NULL,
     line_name VARCHAR(200)
 );
 COMMENT ON TABLE line_mst IS 'Production line master';
+COMMENT ON COLUMN line_mst.process_type IS 'Process type (e.g. assembly, test)';
 COMMENT ON COLUMN line_mst.line_code IS 'Line identifier code';
 COMMENT ON COLUMN line_mst.line_name IS 'Line display name';
 
@@ -58,13 +60,15 @@ CREATE TABLE IF NOT EXISTS equip_mst (
     line_id INTEGER NOT NULL REFERENCES line_mst(id) ON DELETE CASCADE,
     equip_code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(200) NOT NULL,
-    type VARCHAR(100)
+    type VARCHAR(100),
+    install_date DATE
 );
 COMMENT ON TABLE equip_mst IS 'Equipment master; belongs to a line';
 COMMENT ON COLUMN equip_mst.line_id IS 'Owning line (single/same/mixed line)';
 COMMENT ON COLUMN equip_mst.equip_code IS 'Equipment unique ID';
 COMMENT ON COLUMN equip_mst.name IS 'Equipment name';
 COMMENT ON COLUMN equip_mst.type IS 'Equipment type';
+COMMENT ON COLUMN equip_mst.install_date IS 'Equipment installation date';
 
 -- 1.3 Sensor master (Equip -> Sensor)
 CREATE TABLE IF NOT EXISTS sensor_mst (
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS sensor_mst (
     usl_val FLOAT,
     lcl_val FLOAT,
     ucl_val FLOAT,
+    is_golden_standard BOOLEAN DEFAULT FALSE,
     CONSTRAINT uq_sensor_equip_code UNIQUE (equip_id, sensor_code)
 );
 COMMENT ON TABLE sensor_mst IS 'Sensor master; attached to equipment';
@@ -86,6 +91,7 @@ COMMENT ON COLUMN sensor_mst.lsl_val IS 'Lower Spec Limit';
 COMMENT ON COLUMN sensor_mst.usl_val IS 'Upper Spec Limit';
 COMMENT ON COLUMN sensor_mst.lcl_val IS 'Lower Control Limit';
 COMMENT ON COLUMN sensor_mst.ucl_val IS 'Upper Control Limit';
+COMMENT ON COLUMN sensor_mst.is_golden_standard IS 'Golden standard sensor for comparison';
 
 -- 1.4 Worker & shift config
 CREATE TABLE IF NOT EXISTS worker_mst (
@@ -142,6 +148,52 @@ COMMENT ON TABLE maint_cfg IS 'Maintenance type definition';
 COMMENT ON COLUMN maint_cfg.maint_type IS 'Preventive, corrective, etc.';
 COMMENT ON COLUMN maint_cfg.description IS 'Maintenance description';
 
+-- 1.6 Work order (production order)
+CREATE TABLE IF NOT EXISTS work_order (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    order_no VARCHAR(50) UNIQUE NOT NULL,
+    model_name VARCHAR(200),
+    target_cnt INTEGER,
+    sop_link VARCHAR(500),
+    start_date TIMESTAMPTZ,
+    end_date TIMESTAMPTZ
+);
+COMMENT ON TABLE work_order IS 'Production work order';
+COMMENT ON COLUMN work_order.order_no IS 'Work order number';
+COMMENT ON COLUMN work_order.model_name IS 'Product model name';
+COMMENT ON COLUMN work_order.target_cnt IS 'Target production count';
+COMMENT ON COLUMN work_order.sop_link IS 'SOP document link';
+COMMENT ON COLUMN work_order.start_date IS 'Order start date';
+COMMENT ON COLUMN work_order.end_date IS 'Order end date';
+
+-- 1.7 Parts master (Equip -> Parts)
+CREATE TABLE IF NOT EXISTS parts_mst (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE CASCADE,
+    part_name VARCHAR(200) NOT NULL,
+    spec_lifespan_hours FLOAT,
+    current_usage_hours FLOAT DEFAULT 0,
+    last_replacement_date TIMESTAMPTZ
+);
+COMMENT ON TABLE parts_mst IS 'Parts/spare master per equipment';
+COMMENT ON COLUMN parts_mst.equip_id IS 'Parent equipment';
+COMMENT ON COLUMN parts_mst.part_name IS 'Part name';
+COMMENT ON COLUMN parts_mst.spec_lifespan_hours IS 'Specified lifespan in hours';
+COMMENT ON COLUMN parts_mst.current_usage_hours IS 'Current usage hours';
+COMMENT ON COLUMN parts_mst.last_replacement_date IS 'Last replacement timestamp';
+
+-- 1.8 Defect code master
+CREATE TABLE IF NOT EXISTS defect_code_mst (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    defect_code VARCHAR(50) UNIQUE NOT NULL,
+    reason_name VARCHAR(200),
+    category VARCHAR(100)
+);
+COMMENT ON TABLE defect_code_mst IS 'Defect reason code definition';
+COMMENT ON COLUMN defect_code_mst.defect_code IS 'Defect code';
+COMMENT ON COLUMN defect_code_mst.reason_name IS 'Reason display name';
+COMMENT ON COLUMN defect_code_mst.category IS 'Defect category';
+
 
 -- ----------------------------------------------------------------------------
 -- [2. History & Assignment]
@@ -183,6 +235,7 @@ CREATE TABLE IF NOT EXISTS prod_his (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     time TIMESTAMPTZ NOT NULL,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
+    work_order_id INTEGER REFERENCES work_order(id) ON DELETE SET NULL,
     total_cnt INTEGER DEFAULT 0,
     good_cnt INTEGER DEFAULT 0,
     defect_cnt INTEGER DEFAULT 0,
@@ -192,9 +245,24 @@ SELECT create_hypertable('prod_his', 'time', chunk_time_interval => INTERVAL '1 
 COMMENT ON TABLE prod_his IS 'Performance/quality metrics';
 COMMENT ON COLUMN prod_his.time IS 'Record timestamp (partition key)';
 COMMENT ON COLUMN prod_his.equip_id IS 'Equipment';
+COMMENT ON COLUMN prod_his.work_order_id IS 'Related work order';
 COMMENT ON COLUMN prod_his.total_cnt IS 'Total count';
 COMMENT ON COLUMN prod_his.good_cnt IS 'Good count';
 COMMENT ON COLUMN prod_his.defect_cnt IS 'Defect count';
+
+-- 2.3a Defect history (Prod_His, Defect_Code_Mst)
+-- Note: No FK to prod_his (hypertable PK is id+time; TimescaleDB disallows FK on id-only).
+-- Application ensures prod_his_id refers to valid prod_his(id).
+CREATE TABLE IF NOT EXISTS defect_his (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    prod_his_id BIGINT NOT NULL,
+    defect_code_id INTEGER NOT NULL REFERENCES defect_code_mst(id) ON DELETE RESTRICT,
+    defect_qty INTEGER DEFAULT 0
+);
+COMMENT ON TABLE defect_his IS 'Defect detail by reason code per production record';
+COMMENT ON COLUMN defect_his.prod_his_id IS 'Production history record';
+COMMENT ON COLUMN defect_his.defect_code_id IS 'Defect reason (defect_code_mst)';
+COMMENT ON COLUMN defect_his.defect_qty IS 'Defect quantity for this code';
 
 -- 2.4 Alarm history (Equip, Alarm_Cfg)
 CREATE TABLE IF NOT EXISTS alarm_his (
@@ -212,11 +280,12 @@ COMMENT ON COLUMN alarm_his.alarm_def_id IS 'Alarm type (alarm_cfg)';
 COMMENT ON COLUMN alarm_his.trigger_val IS 'Measurement at alarm trigger';
 COMMENT ON COLUMN alarm_his.alarm_type IS 'SPEC_OUT, CONTROL_OUT, SYSTEM';
 
--- 2.5 Maintenance history (Equip, Maint_Cfg, Alarm_His, Worker)
+-- 2.5 Maintenance history (Equip, Maint_Cfg, Parts_Mst, Alarm_His, Worker)
 CREATE TABLE IF NOT EXISTS maint_his (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
     maint_def_id INTEGER NOT NULL REFERENCES maint_cfg(id) ON DELETE RESTRICT,
+    part_id INTEGER REFERENCES parts_mst(id) ON DELETE SET NULL,
     alarm_his_id INTEGER UNIQUE REFERENCES alarm_his(id) ON DELETE SET NULL,
     worker_id INTEGER REFERENCES worker_mst(id) ON DELETE SET NULL,
     start_time TIMESTAMPTZ NOT NULL,
@@ -226,6 +295,7 @@ CREATE TABLE IF NOT EXISTS maint_his (
 COMMENT ON TABLE maint_his IS 'Maintenance activity log';
 COMMENT ON COLUMN maint_his.equip_id IS 'Equipment';
 COMMENT ON COLUMN maint_his.maint_def_id IS 'Maintenance type (maint_cfg)';
+COMMENT ON COLUMN maint_his.part_id IS 'Replaced part (parts_mst)';
 COMMENT ON COLUMN maint_his.alarm_his_id IS 'Related alarm history';
 COMMENT ON COLUMN maint_his.worker_id IS 'Maintenance performer';
 COMMENT ON COLUMN maint_his.start_time IS 'Maintenance start';
@@ -253,31 +323,35 @@ COMMENT ON COLUMN shift_map.equip_id IS 'When assigned to specific equipment';
 -- [3. Analytics Summary]
 -- ----------------------------------------------------------------------------
 
--- 3.1 KPI aggregate (Shift, Line, Equip)
+-- 3.1 KPI aggregate (Shift, Line, Equip, Work_Order)
 CREATE TABLE IF NOT EXISTS kpi_sum (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     calc_date DATE NOT NULL,
     shift_def_id INTEGER REFERENCES shift_cfg(id) ON DELETE SET NULL,
     line_id INTEGER REFERENCES line_mst(id) ON DELETE SET NULL,
     equip_id INTEGER REFERENCES equip_mst(id) ON DELETE SET NULL,
+    work_order_id INTEGER REFERENCES work_order(id) ON DELETE SET NULL,
     availability FLOAT,
     performance FLOAT,
     quality FLOAT,
     oee FLOAT,
     mttr FLOAT,
-    mtbf FLOAT
+    mtbf FLOAT,
+    uph FLOAT
 );
-COMMENT ON TABLE kpi_sum IS 'KPI aggregates by date/shift/line/equip';
+COMMENT ON TABLE kpi_sum IS 'KPI aggregates by date/shift/line/equip/work order';
 COMMENT ON COLUMN kpi_sum.calc_date IS 'Aggregation date';
 COMMENT ON COLUMN kpi_sum.shift_def_id IS 'Shift (nullable)';
 COMMENT ON COLUMN kpi_sum.line_id IS 'Line (nullable)';
 COMMENT ON COLUMN kpi_sum.equip_id IS 'Equipment (nullable)';
+COMMENT ON COLUMN kpi_sum.work_order_id IS 'Work order (nullable)';
 COMMENT ON COLUMN kpi_sum.availability IS 'Availability';
 COMMENT ON COLUMN kpi_sum.performance IS 'Performance';
 COMMENT ON COLUMN kpi_sum.quality IS 'Quality';
 COMMENT ON COLUMN kpi_sum.oee IS 'OEE';
 COMMENT ON COLUMN kpi_sum.mttr IS 'Mean time to repair';
 COMMENT ON COLUMN kpi_sum.mtbf IS 'Mean time between failures';
+COMMENT ON COLUMN kpi_sum.uph IS 'Units per hour';
 
 -- ----------------------------------------------------------------------------
 -- [4. Indexes]
@@ -288,8 +362,12 @@ CREATE INDEX IF NOT EXISTS idx_measurement_equip_time ON measurement (equip_id, 
 CREATE INDEX IF NOT EXISTS idx_measurement_sensor_time ON measurement (sensor_id, time DESC);
 -- status_his: equipment status over time
 CREATE INDEX IF NOT EXISTS idx_status_his_equip_start ON status_his (equip_id, start_time DESC);
--- prod_his: production by equipment and time
+-- prod_his: production by equipment and time, work order
 CREATE INDEX IF NOT EXISTS idx_prod_his_equip_time ON prod_his (equip_id, time DESC);
+CREATE INDEX IF NOT EXISTS idx_prod_his_work_order ON prod_his (work_order_id);
+-- defect_his: by production record and defect code
+CREATE INDEX IF NOT EXISTS idx_defect_his_prod ON defect_his (prod_his_id);
+CREATE INDEX IF NOT EXISTS idx_defect_his_code ON defect_his (defect_code_id);
 -- alarm_his: alarms by equipment, time
 CREATE INDEX IF NOT EXISTS idx_alarm_his_equip_time ON alarm_his (equip_id, time DESC);
 CREATE INDEX IF NOT EXISTS idx_alarm_his_time ON alarm_his (time DESC);
@@ -298,9 +376,10 @@ CREATE INDEX IF NOT EXISTS idx_maint_his_equip_start ON maint_his (equip_id, sta
 -- shift_map: lookups by date, worker
 CREATE INDEX IF NOT EXISTS idx_shift_map_work_date ON shift_map (work_date);
 CREATE INDEX IF NOT EXISTS idx_shift_map_worker ON shift_map (worker_id);
--- kpi_sum: aggregates by date, equipment
+-- kpi_sum: aggregates by date, equipment, work order
 CREATE INDEX IF NOT EXISTS idx_kpi_sum_calc_date ON kpi_sum (calc_date);
 CREATE INDEX IF NOT EXISTS idx_kpi_sum_equip ON kpi_sum (equip_id);
+CREATE INDEX IF NOT EXISTS idx_kpi_sum_work_order ON kpi_sum (work_order_id);
 
 -- ----------------------------------------------------------------------------
 -- [5. TimescaleDB Policies]

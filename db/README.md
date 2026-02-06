@@ -1,195 +1,193 @@
-# Edge HMI Database
+# 🗄️ Edge HMI Database
 
-TimescaleDB 기반의 산업용 모니터링 및 유지보수 시스템 데이터베이스
+TimescaleDB-based database for industrial monitoring and maintenance systems.
 
-## 데이터 보호
+## 🛡️ Data Protection
 
-### 현재 설정 분석
+### Current Configuration
 
-✅ **안전한 설정:**
-- Named Volume 사용 (`edge_hmi_data`): 컨테이너가 삭제되어도 데이터는 유지됨
-- `init-db.sql`은 첫 초기화 시에만 실행됨 (데이터베이스가 이미 있으면 실행 안 됨)
+✅ **Safe settings:**
 
-⚠️ **데이터 소실 위험:**
-- `docker compose down -v` 사용 시 volume이 삭제되어 데이터 소실
-- Docker volume 삭제 명령어 (`docker volume rm`) 사용 시 데이터 소실
+- 📦 Named Volume (`edge_hmi_data`): Data persists even if the container is removed
+- 📄 `init-db.sql` runs only on first initialization (skipped if the database already exists)
 
-### 안전한 명령어
+⚠️ **Data loss risk:**
+
+- `docker compose down -v` removes the volume and causes data loss
+- Docker volume removal (`docker volume rm`) causes data loss
+
+### Safe Commands
 
 ```bash
-# db/에서 실행. 컨테이너만 중지/삭제 (데이터 유지)
+# Run from db/. Stop/remove containers only (data preserved)
 docker compose down
 
-# 컨테이너와 네트워크만 삭제 (데이터 유지)
+# Remove containers and networks only (data preserved)
 docker compose down --remove-orphans
 
-# ❌ 위험: Volume까지 삭제 (데이터 소실!)
+# ⚠️ DANGER: Remove volumes too (data loss!)
 docker compose down -v
 ```
 
-## 사용 방법
+## 📋 Usage
 
-### 1. 환경 설정
+### 1. ⚙️ Environment Setup
 
-`db/` 디렉터리에 `.env` 파일 생성. **DB명·유저 등은 여기서 정한 값으로 생성됩니다.** 스키마명은 `init-db.sql`에 정의되어 있으며, `.env`의 `POSTGRES_SCHEMA`와 동일하게 맞출 것.
+Create `.env` in the `db/` directory. **DB name, user, etc. are set here.** The schema name is defined in `init-db.sql` and must match `POSTGRES_SCHEMA` in `.env`. **Do not commit `.env`** — use a strong password and keep it secret.
 
 ```bash
 cd db
-cat > .env << 'EOF'
-POSTGRES_DB=edge_hmi
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=1q2w3e4r
-TZ=UTC
-EOF
+# Create .env with: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA, TZ
+# Example variable names only — set your own values.
 ```
 
-- `POSTGRES_DB`: 생성할 데이터베이스 이름
-- `POSTGRES_USER` / `POSTGRES_PASSWORD`: DB 접속 계정
-- `TZ`: 타임존 (예: `UTC`, `Asia/Seoul`)
+- `POSTGRES_DB`: Database name
+- `POSTGRES_USER` / `POSTGRES_PASSWORD`: DB credentials (use a strong password)
+- `TZ`: Timezone (e.g. `UTC`, `Asia/Seoul`)
 
-### 2. 실행
+### 2. 🚀 Run
 
 ```bash
-# db/ 디렉터리에서 실행
+# Run from db/ directory
 cd db
 docker compose up -d
 
-# 로그 확인
+# View logs
 docker compose logs -f edge-hmi-db
 ```
 
-### 3. 데이터베이스 연결
+### 3. 🔌 Connect to Database
 
-`.env`의 `POSTGRES_USER`, `POSTGRES_DB`를 사용합니다.
+Uses `POSTGRES_USER` and `POSTGRES_DB` from `.env`. Replace with your actual user and DB name.
 
 ```bash
-# 컨테이너 내부에서 접속 (admin, edge_hmi는 .env 예시)
-docker exec -it hmi-db-postgres psql -U admin -d edge_hmi
+# Connect from inside container
+docker exec -it hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 
-# 외부에서 접속
-psql -h localhost -p 5432 -U admin -d edge_hmi
+# Connect from host
+psql -h localhost -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
-**스키마:**
+**Schema:**
 
-- DB명 = `.env`의 `POSTGRES_DB`. 스키마명 = **`core`** (표준). `.env` `POSTGRES_SCHEMA=core`와 맞출 것.
-- 테이블은 `core` 스키마에 생성되며, `search_path`로 스키마명 생략 가능.
-- 명시적: `SELECT * FROM core.line_mst;` / 간편: `SELECT * FROM line_mst;`
+- DB name = `POSTGRES_DB` from `.env`. Schema = **`core`** (standard). Align with `POSTGRES_SCHEMA=core` in `.env`.
+- Tables are created in the `core` schema; `search_path` allows omitting schema name.
+- Explicit: `SELECT * FROM core.line_mst;` / Short: `SELECT * FROM line_mst;`
 
-## Registry 이미지에서 init-db.sql 확인·추출
+## 📦 Inspect / Extract init-db.sql from Registry Image
 
-이미지만 pull한 다른 서버에서 `init-db.sql` 내용을 보거나 파일로 뽑을 수 있다.
+On another server with only the pulled image, you can view or extract `init-db.sql`.
 
-**이미지 내 경로** (실행 순서 01 → 02; pg_cron 설정은 Dockerfile에서)
+Paths in image (run order 01 → 02; pg_cron setup is in the Dockerfile)
 
 - `init-db.sql` → `/docker-entrypoint-initdb.d/01-init-db.sql`
 - `kpi-scheduler.sql` → `/docker-entrypoint-initdb.d/02-kpi-scheduler.sql`
-- `docker-compose.yml` (참고용) → `/opt/edge-hmi-db/docker-compose.yml`
+- `docker-compose.yml` (reference) → `/opt/edge-hmi-db/docker-compose.yml`
 
-**1. 터미널에서 바로 보기**
+### 1. View in terminal
+
+Set your registry image (e.g. from `.env` or project config). Do not hardcode internal URLs in docs or scripts.
 
 ```bash
-export IMG="{REGISTRY_HOST}:5000/btx/edge-hmi-db:latest"
+export IMG="<REGISTRY_HOST>:<PORT>/btx/edge-hmi-db:latest"
 docker run --rm ${IMG} cat /docker-entrypoint-initdb.d/01-init-db.sql
 ```
 
-**2. 현재 디렉터리에 파일로 추출**
+### 2. Extract to current directory
 
 ```bash
-docker run --rm {REGISTRY_HOST}:5000/btx/edge-hmi-db:latest cat /docker-entrypoint-initdb.d/01-init-db.sql > init-db.sql
-# db 프로젝트에서: … > sql/init-db.sql
+docker run --rm $IMG cat /docker-entrypoint-initdb.d/01-init-db.sql > init-db.sql
+# In db project: … > sql/init-db.sql
 ```
 
-## KPI 요약 스케줄러 (`kpi_sum`)
+## 📊 KPI Summary Scheduler (`kpi_sum`)
 
-`kpi-scheduler.sql`이 `init-db.sql` 직후에 실행되며, `fn_kpi_sum_calc(p_calc_date DATE)` 함수를 생성한다.
+`kpi-scheduler.sql` runs right after `init-db.sql` and creates `fn_kpi_sum_calc(p_calc_date DATE)`.
 
-### 함수 설명
+### Function Description
 
-해당 일자의 `shift_map` 기준 (shift/line/equip)별로 `status_his`, `prod_his`, `alarm_his`, `maint_his`, `kpi_cfg`를 이용해 다음을 계산해 `kpi_sum`에 저장:
+Computes for the given date, per shift_map (shift/line/equip), using `status_his`, `prod_his`, `alarm_his`, `maint_his`, `kpi_cfg`, and stores results in `kpi_sum`:
 
-- **Availability** = Run시간 / 계획시간
-- **Performance** = (생산량 × 표준사이클) / Run시간
-- **Quality** = 양품수 / 전체수
+- **Availability** = Run time / Planned time
+- **Performance** = (Output × Standard cycle) / Run time
+- **Quality** = Good count / Total count
 - **OEE** = Availability × Performance × Quality
-- **MTTR** = 평균 수리시간 (분)
-- **MTBF** = Run시간 / 고장횟수 (시간)
+- **MTTR** = Mean time to repair (minutes)
+- **MTBF** = Run time / Fault count (hours)
 
-### 스케줄링 방법
+### ⏰ Scheduling
 
-**기본: pg_cron 사용** (이미지에 포함됨)
+**Default: pg_cron** (included in image)
 
-이 이미지는 pg_cron이 포함되어 있어, 자동으로 매일 01:00에 전일 KPI를 계산합니다.
+The image includes pg_cron, which automatically runs daily at 01:00 to compute the previous day's KPI.
 
-**첫 실행 후 재시작 필요:**
+**Restart after first run:**
 
 ```bash
-# 첫 빌드/실행 후, pg_cron 설정 적용을 위해 컨테이너 재시작
+# Restart container after first build/run to apply pg_cron
 docker-compose restart
 ```
 
-**pg_cron 상태 확인:**
+**Check pg_cron status:**
 
 ```bash
-# 등록된 스케줄 목록 (jobid, schedule, command 등)
-docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT jobid, schedule, command FROM cron.job;"
+# List registered jobs (jobid, schedule, command). Use your POSTGRES_USER and POSTGRES_DB.
+docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT jobid, schedule, command FROM cron.job;"
 ```
 
-**스케줄이 실제로 돌았는지 확인:**
+**Verify job execution:**
 
-pg_cron 1.6에는 `cron.job_run_details` **가 없습니다**. 실행 이력 테이블은 최신/클라우드용 variant에만 있음.
+pg_cron 1.6 does **not** have `cron.job_run_details`. The run history table exists only in newer/cloud variants.
 
-**KPI job (`fn_kpi_sum_calc`) 확인:** `core.kpi_sum` 에 해당 `calc_date` 행이 생겼는지로 판단:
+**KPI job check:** Use presence of rows in `core.kpi_sum` for the given `calc_date`:
 
 ```sql
--- 전일(어제) KPI가 계산됐는지
+-- Check if yesterday's KPI was computed
 SELECT calc_date, COUNT(*) FROM core.kpi_sum WHERE calc_date = CURRENT_DATE - 1 GROUP BY 1;
 ```
 
-행이 있으면 해당 일자 스케줄 실행된 것. 없으면 미실행이거나 `shift_map` 등 원본 데이터 없음.
+Rows present = job ran for that date. None = not run or no source data (e.g. `shift_map`).
 
-**수동 실행:**
+**Manual run:**
 
 ```bash
-# 특정 일자 계산
-docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT fn_kpi_sum_calc('2025-01-25');"
+# Compute for a specific date
+docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT fn_kpi_sum_calc('2025-01-25');"
 
-# 전일 계산
-docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
+# Compute previous day
+docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
 ```
 
-**대안: 호스트 cron 사용** (pg_cron 없이)
+**Alternative: Host cron** (without pg_cron)
 
-pg_cron이 동작하지 않는 경우, 호스트 cron 사용:
+If pg_cron is not available, use host cron (use your `POSTGRES_USER` and `POSTGRES_DB`):
 
 ```bash
-# 호스트 crontab 편집
 crontab -e
-
-# 다음 줄 추가 (매일 01:00에 전일 KPI 계산)
-0 1 * * * docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
+# Add line (compute previous day's KPI at 01:00 daily)
+0 1 * * * docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
 ```
 
-## 데이터 백업 및 복원
+## 💾 Backup and Restore
 
-### 백업
+### Backup
 
 ```bash
-# 데이터베이스 백업
-docker exec hmi-db-postgres pg_dump -U admin edge_hmi > backup_$(date +%Y%m%d_%H%M%S).sql
+# Database backup (use your POSTGRES_USER and POSTGRES_DB)
+docker exec hmi-db-postgres pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# 또는 Volume 백업
+# Or volume backup
 docker run --rm -v edge-hmi-db_edge_hmi_data:/data -v $(pwd):/backup \
   alpine tar czf /backup/volume_backup_$(date +%Y%m%d_%H%M%S).tar.gz -C /data .
 ```
 
-### 복원
+### Restore
 
 ```bash
-# SQL 백업 파일로 복원
-docker exec -i hmi-db-postgres psql -U admin -d edge_hmi < backup_20240116_120000.sql
+# Restore from SQL backup
+docker exec -i hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB < backup_20240116_120000.sql
 
-# Volume 백업으로 복원 (주의: 기존 데이터 삭제됨). db/에서 실행
+# Restore from volume backup (⚠️ existing data will be lost). Run from db/
 docker compose down
 docker volume rm edge-hmi-db_edge_hmi_data
 docker run --rm -v edge-hmi-db_edge_hmi_data:/data -v $(pwd):/backup \
@@ -197,32 +195,32 @@ docker run --rm -v edge-hmi-db_edge_hmi_data:/data -v $(pwd):/backup \
 docker compose up -d
 ```
 
-## 주의사항
+## 📝 Notes
 
-1. **절대 사용하지 말아야 할 명령어:**
+1. **🚫 Commands to avoid:**
 
    ```bash
-   docker compose down -v  # Volume 삭제 → 데이터 소실!
-   docker volume rm edge-hmi-db_edge_hmi_data  # Volume 삭제 → 데이터 소실!
+   docker compose down -v  # Removes volume → data loss!
+   docker volume rm edge-hmi-db_edge_hmi_data  # Removes volume → data loss!
    ```
 
-2. **데이터가 있는 상태에서 init-db.sql 변경:**
-   - `init-db.sql`은 첫 실행 시에만 적용됨
-   - 스키마 변경이 필요하면 마이그레이션 스크립트를 별도로 작성해야 함
+2. **Changing init-db.sql when data exists:**
+   - `init-db.sql` is applied only on first run
+   - For schema changes, write a separate migration script
 
-3. **포트 충돌:**
-   - 로컬에 PostgreSQL이 이미 실행 중이면 포트 5432 충돌 가능
-   - docker-compose.yml에서 포트 변경 가능: `"5433:5432"`
+3. **🔌 Port conflict:**
+   - If PostgreSQL is already running locally, port 5432 may conflict
+   - Change port in docker-compose.yml: `"5433:5432"`
 
-## Volume 확인
+## 🔍 Volume Inspection
 
 ```bash
-# Volume 목록 확인
+# List volumes
 docker volume ls | grep edge_hmi
 
-# Volume 상세 정보
+# Inspect volume
 docker volume inspect edge-hmi-db_edge_hmi_data
 
-# Volume 사용량 확인 (대략적)
+# Approximate usage
 docker system df -v
 ```
