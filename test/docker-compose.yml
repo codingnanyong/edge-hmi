@@ -1,0 +1,507 @@
+# Edge HMI — Private Registry pull test
+# All work in test/ folder. Use .env (cp .env.example .env if missing)
+#   docker login <REGISTRY_HOST>:<PORT>
+#   cd test && docker compose pull && docker compose up -d
+#
+# Image versions: DB_IMAGE_TAG, API_IMAGE_TAG in .env
+#
+name: edge-hmi-test
+
+services:
+  db:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-db:${DB_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-db-postgres
+    env_file: ./.env
+    environment:
+      - TZ=${TZ:-Asia/Seoul}
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+    ports:
+      - "5432:5432"
+    volumes:
+      - edge_hmi_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-edge_hmi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  line_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-line-mst:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-line-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  equip_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-equip-mst:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-equip-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  sensor_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-sensor-mst:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-sensor-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8003:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  kpi_sum:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-sum:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-kpi-sum
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8004:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  worker_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-worker-mst:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-worker-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8005:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  shift_cfg:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-cfg:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-shift-cfg
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8006:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  kpi_cfg:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-cfg:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-kpi-cfg
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8007:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  alarm_cfg:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-cfg:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-alarm-cfg
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8008:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  maint_cfg:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-cfg:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-maint-cfg
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8009:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  work_order:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-work-order:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-work-order
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8016:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  parts_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-parts-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    pull_policy: always
+    container_name: hmi-api-parts-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8017:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  defect_code_mst:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-code-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    pull_policy: always
+    container_name: hmi-api-defect-code-mst
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8018:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  measurement:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-measurement:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-measurement
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8010:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  status_his:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-status-his:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-status-his
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8011:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  prod_his:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-prod-his:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-prod-his
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8012:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  alarm_his:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-his:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-alarm-his
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8013:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  maint_his:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-his:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-maint-his
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8014:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  shift_map:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-map:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api-shift-map
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8015:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  defect_his:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-his:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    pull_policy: always
+    container_name: hmi-api-defect-his
+    env_file: ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-edge_hmi}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:}
+      - POSTGRES_SCHEMA=core
+    ports:
+      - "8019:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  hmi-api:
+    image: ${REGISTRY:localhost}/btx/edge-hmi-api:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: hmi-api
+    environment:
+      - TABLE_SERVICE_PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  edge_hmi_test_data:
+    name: edge_hmi_data_test
