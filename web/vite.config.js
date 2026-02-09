@@ -7,6 +7,7 @@ export default defineConfig({
         alias: { '@': new URL('./src', import.meta.url).pathname },
     },
     server: {
+        host: true,
         port: 8889,
         proxy: {
             '/openapi.json': { target: 'http://localhost:8000', changeOrigin: true },
@@ -32,5 +33,9 @@ export default defineConfig({
             '/shift_map': { target: 'http://localhost:8000', changeOrigin: true },
             '/kpi_sum': { target: 'http://localhost:8000', changeOrigin: true },
         },
+    },
+    preview: {
+        host: true,
+        port: 8889,
     },
 });

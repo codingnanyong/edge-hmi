@@ -1,0 +1,22 @@
+/** Simple icon for each API service (emoji) */
+export const SERVICE_ICONS: Record<string, string> = {
+  line_mst: '━',
+  equip_mst: '⚙',
+  sensor_mst: '📡',
+  worker_mst: '👤',
+  shift_cfg: '🕐',
+  kpi_cfg: '📊',
+  alarm_cfg: '🔔',
+  maint_cfg: '🔧',
+  work_order: '📋',
+  parts_mst: '🔩',
+  defect_code_mst: '⚠',
+  measurement: '📐',
+  status_his: '📈',
+  prod_his: '🏭',
+  defect_his: '❌',
+  alarm_his: '🔔',
+  maint_his: '🔧',
+  shift_map: '🗓',
+  kpi_sum: '📊',
+}
