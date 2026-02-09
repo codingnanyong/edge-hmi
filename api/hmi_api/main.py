@@ -1,4 +1,4 @@
-"""hmi-api: 프록시 전용 게이트웨이. 웹 UI는 hmi_web(React)에서 제공."""
+"""hmi-api: 프록시 전용 게이트웨이. 웹 UI는 web(React) 서비스에서 제공."""
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,12 +25,12 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """API 게이트웨이 루트. 웹 UI는 hmi_web 서비스."""
+    """API 게이트웨이 루트. 웹 UI는 web 서비스."""
     return {
         "service": "Edge HMI API Gateway",
         "version": APP_VERSION,
         "role": "proxy-only",
-        "web_ui": "hmi_web (React, separate service)",
+        "web_ui": "web (React, separate service)",
         "endpoints": {
             "openapi": "/openapi.json",
             "info": "/info",
