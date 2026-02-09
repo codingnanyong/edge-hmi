@@ -1,7 +1,7 @@
 """Gateway config. Table services = compose service names (DNS)."""
 from pydantic_settings import BaseSettings
 
-APP_VERSION = "1.0.5"
+APP_VERSION = "1.0.6"
 
 TABLE_SERVICES = [
     "line_mst",

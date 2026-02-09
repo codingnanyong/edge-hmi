@@ -1,0 +1,283 @@
+.page {
+  max-width: min(1200px, 100%);
+}
+
+.breadcrumb {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.breadcrumb a {
+  color: var(--accent);
+}
+
+.breadcrumb span {
+  margin: 0 0.35rem;
+}
+
+.pageTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.muted {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.swaggerWrap {
+  width: 100%;
+  max-width: 100%;
+  --swagger-ui-font-size: 14px;
+}
+
+/* Table API 상세: Swagger 상단 정보·OAS 뱃지·Schemas 섹션 숨김 */
+.swaggerWrap .information-container,
+.swaggerWrap .info,
+.swaggerWrap .models,
+.swaggerWrap .swagger-ui .info__small,
+.swaggerWrap .swagger-ui .info__link,
+.swaggerWrap .swagger-ui > section:first-child,
+.swaggerWrap a[href*="swagger.io"],
+.swaggerWrap .version-stamp {
+  display: none !important;
+}
+
+.loading {
+  color: var(--text-secondary);
+}
+
+.operationsSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.serviceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  text-align: left;
+  background: var(--bg-tertiary);
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.serviceHeader:hover {
+  background: var(--bg-card-hover);
+}
+
+.chevron {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.operationList {
+  padding: 0.5rem 0;
+}
+
+.operationCard {
+  margin: 0 0.75rem 0.5rem;
+  border: 1px solid;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.operationCard:last-child {
+  margin-bottom: 0.75rem;
+}
+
+.operationCardGET {
+  background: #e7f1ff;
+  border-color: #b6d4fe;
+}
+
+.operationCardPOST {
+  background: #d1e7dd;
+  border-color: #a3cfbb;
+}
+
+.operationCardPATCH {
+  background: #d1e7dd;
+  border-color: #a3cfbb;
+}
+
+.operationCardDELETE {
+  background: #f8d7da;
+  border-color: #f5c2c7;
+}
+
+.operationRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.operationRow:hover {
+  filter: brightness(0.97);
+}
+
+.method {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  color: white;
+}
+
+.methodGET {
+  background: #0d6efd;
+}
+
+.methodPOST {
+  background: #198754;
+}
+
+.methodPATCH {
+  background: #198754;
+}
+
+.methodDELETE {
+  background: #dc3545;
+}
+
+.path {
+  flex: 1;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.operationChevron {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.operationBody {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-primary);
+}
+
+.tryOut {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tryOutParams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tryOutParams label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  width: 5rem;
+}
+
+.bodyLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--text-primary);
+}
+
+.bodyInput {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btnPrimary {
+  align-self: flex-start;
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--accent-hover, var(--accent));
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.result,
+.resultError {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-radius: 6px;
+}
+
+.result {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.resultError {
+  background: #fff5f5;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.tryOutHint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}

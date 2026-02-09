@@ -1,0 +1,131 @@
+:root,
+[data-theme='light'] {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafbfc;
+  --border: #d1d9e0;
+  --border-strong: #8b949e;
+  --text-primary: #0d1117;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --accent: #238636;
+  --accent-hover: #2ea043;
+  --accent-muted: rgba(35, 134, 54, 0.12);
+  --accent-active: #166534;
+  --sidebar-width: 260px;
+  --header-height: 4px;
+  --bg-tertiary: #e8eaed;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #21262d;
+  --bg-card-hover: #30363d;
+  --border: #30363d;
+  --border-strong: #6e7681;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #6e7681;
+  --accent: #3fb950;
+  --accent-hover: #56d364;
+  --accent-muted: rgba(63, 185, 80, 0.15);
+  --accent-active: #56d364;
+  --bg-tertiary: #21262d;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Swagger UI 다크 모드 가독성 */
+[data-theme='dark'] .swagger-ui {
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui .opblock,
+[data-theme='dark'] .swagger-ui .opblock-summary,
+[data-theme='dark'] .swagger-ui section.models,
+[data-theme='dark'] .swagger-ui .model-box {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+[data-theme='dark'] .swagger-ui .opblock-tag,
+[data-theme='dark'] .swagger-ui .opblock-tag-section h3,
+[data-theme='dark'] .swagger-ui .opblock-tag-section h3 span {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+[data-theme='dark'] .swagger-ui .opblock-summary-path,
+[data-theme='dark'] .swagger-ui .opblock-summary-description {
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui table thead tr th,
+[data-theme='dark'] .swagger-ui table tbody tr td,
+[data-theme='dark'] .swagger-ui .parameter__name,
+[data-theme='dark'] .swagger-ui .parameter__type,
+[data-theme='dark'] .swagger-ui .parameter__in,
+[data-theme='dark'] .swagger-ui .prop-type {
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui table thead tr,
+[data-theme='dark'] .swagger-ui .table-parameters thead tr {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border) !important;
+}
+[data-theme='dark'] .swagger-ui table tbody tr td {
+  border-color: var(--border) !important;
+  background: var(--bg-card) !important;
+}
+[data-theme='dark'] .swagger-ui input[type=text],
+[data-theme='dark'] .swagger-ui input[type=number],
+[data-theme='dark'] .swagger-ui textarea,
+[data-theme='dark'] .swagger-ui select {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui .try-out__btn {
+  border-color: var(--border) !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui .response-col_status,
+[data-theme='dark'] .swagger-ui .response-col_description,
+[data-theme='dark'] .swagger-ui .responses-inner h4,
+[data-theme='dark'] .swagger-ui .responses-inner h5 {
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui .responses-table td,
+[data-theme='dark'] .swagger-ui .responses-inner {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}

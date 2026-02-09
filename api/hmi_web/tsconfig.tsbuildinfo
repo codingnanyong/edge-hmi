@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/constants.ts","./src/main.tsx","./src/vite-env.d.ts","./src/components/Layout.tsx","./src/components/Sidebar.tsx","./src/data/feature-usage.ts","./src/pages/DashboardHome.tsx","./src/pages/FeatureUsageEmbed.tsx","./src/pages/ServiceDetail.tsx","./src/pages/SwaggerEmbed.tsx"],"version":"5.6.3"}
