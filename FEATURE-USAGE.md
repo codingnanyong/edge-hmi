@@ -1,12 +1,12 @@
-# Edge HMI Feature API Usage Guide
+# 📖 Edge HMI Feature API Usage Guide
 
-Base URL: `http://{publish ip}` (or `http://localhost:8000`)
+🌐 **Base URL**: `http://{publish ip}` (or `http://localhost:8000`)
 
 ---
 
-## 01. Overview
+## 01. 📋 Overview
 
-### 1.1 Defect Rate by Model
+### 1.1 📊 Defect Rate by Model
 
 **Purpose**: Display defect rate per production model as a bar chart for a specific date
 
@@ -16,7 +16,7 @@ Base URL: `http://{publish ip}` (or `http://localhost:8000`)
 | 2 | prod_his (by work_order_id) | `curl "{{BASE}}/prod_his?work_order_id=1&limit=500"` |
 | 3 | defect_code_mst (labels) | `curl "{{BASE}}/defect_code_mst"` |
 
-**Formula**: `Defect rate(%) = Σ(defect_cnt) / Σ(total_cnt) × 100`
+**📐 Formula**: `Defect rate(%) = Σ(defect_cnt) / Σ(total_cnt) × 100`
 
 ```javascript
 const chartData = workOrders.map(wo => {
@@ -29,7 +29,7 @@ const chartData = workOrders.map(wo => {
 
 ---
 
-### 1.2 Defect Rate by Worker
+### 1.2 👷 Defect Rate by Worker
 
 **Purpose**: Bar chart of defect quantity per worker for a specific date/period
 
@@ -40,15 +40,15 @@ const chartData = workOrders.map(wo => {
 | 3 | prod_his (match with shift_map by equip_id) | `curl "{{BASE}}/prod_his?equip_id=1&limit=500"` |
 | 4 | defect_his | `curl "{{BASE}}/defect_his?prod_his_id=1"` |
 
-**Logic**: Use shift_map (work_date, worker_id, equip_id) to map worker→equipment for the period, then combine with prod_his (equip_id, time) to aggregate defect_cnt per worker
+**🔗 Logic**: Use shift_map (work_date, worker_id, equip_id) to map worker→equipment for the period, then combine with prod_his (equip_id, time) to aggregate defect_cnt per worker
 
 ---
 
-### 1.3 Defect Rate by Worker CSV Download
+### 1.3 📥 Defect Rate by Worker CSV Download
 
 **Purpose**: Export worker defect data to CSV
 
-**API**: Same as 1.2. Convert aggregated results to CSV on the frontend and trigger download
+**🔌 API**: Same as 1.2. Convert aggregated results to CSV on the frontend and trigger download
 
 ```javascript
 const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
@@ -58,7 +58,7 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 
 ---
 
-### 1.4 Equipment Operating Status
+### 1.4 🟢 Equipment Operating Status
 
 **Purpose**: Real-time display of Operating (Green), Stopped (Red), Idle (Orange), Alarm (Blinking Red), Normal Abnormality (Grey)
 
@@ -66,11 +66,11 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 | ------ | ------ |
 | status_his | `curl "{{BASE}}/status_his?equip_id=1&start_time_from=2025-01-01T00:00:00&start_time_to=2025-01-02T00:00:00&limit=200"` |
 
-**status_code**: `Run`=Operating, `Stop`=Stopped, `Fault`=Fault. Merge with alarm_his to determine alarm status
+**📌 status_code**: `Run`=Operating, `Stop`=Stopped, `Fault`=Fault. Merge with alarm_his to determine alarm status
 
 ---
 
-### 1.5 Work Order
+### 1.5 📋 Work Order
 
 **Purpose**: Display order number, item name/code, target quantity, due date, SOP (ERP/MES linked)
 
@@ -78,11 +78,11 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 | ------ | ------ |
 | work_order | `curl "{{BASE}}/work_order"` |
 
-**Response**: order_no, model_name, target_cnt, start_date, end_date, sop_link
+**📤 Response**: order_no, model_name, target_cnt, start_date, end_date, sop_link
 
 ---
 
-### 1.6 Key KPIs
+### 1.6 🎯 Key KPIs
 
 **Purpose**: OEE, real-time good product rate, production progress vs target, current cycle time gauge
 
@@ -91,13 +91,13 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 | kpi_sum | `curl "{{BASE}}/kpi_sum?calc_date=2025-01-01&equip_id=1"` |
 | kpi_cfg | `curl "{{BASE}}/kpi_cfg"` (std_cycle_time, target_oee) |
 
-**Response**: availability, performance, quality, oee, uph, mttr, mtbf
+**📤 Response**: availability, performance, quality, oee, uph, mttr, mtbf
 
-> Run KPI calculation: `docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT core.fn_kpi_sum_calc('2025-01-01'::date);"`
+> 🗄️ Run KPI calculation: `docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT core.fn_kpi_sum_calc('2025-01-01'::date);"`
 
 ---
 
-### 1.7 Short-term Trend
+### 1.7 📈 Short-term Trend
 
 **Purpose**: Last 24h Gantt-based operating status + main sensor 30-min short-term trend
 
@@ -109,7 +109,7 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 
 ---
 
-### 1.8 Equipment Profile
+### 1.8 🏭 Equipment Profile
 
 **Purpose**: Basic info (manufacturing year, main specs, CMMS ID, etc.)
 
@@ -117,11 +117,11 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 | ------ | ------ |
 | equip_mst | `curl "{{BASE}}/equip_mst/1"` |
 
-**Response**: id, line_id, equip_code, name, type, install_date
+**📤 Response**: id, line_id, equip_code, name, type, install_date
 
 ---
 
-### 1.9 Equipment Alarm Status
+### 1.9 🚨 Equipment Alarm Status
 
 **Purpose**: Intuitive display of alarms (equipment status, sensor status, process conditions) per equipment
 
@@ -130,13 +130,13 @@ const csv = "Worker,Date,Total,Defect,DefectRate(%)\n" +
 | alarm_his | `curl "{{BASE}}/alarm_his?equip_id=1&limit=50"` |
 | alarm_cfg | `curl "{{BASE}}/alarm_cfg"` |
 
-Join alarm_his.alarm_def_id with alarm_cfg for severity, description
+🔗 Join alarm_his.alarm_def_id with alarm_cfg for severity, description
 
 ---
 
-## 02. Process & Trend
+## 02. 📈 Process & Trend
 
-### 2.1 Standard Work Compliance Monitoring
+### 2.1 ✅ Standard Work Compliance Monitoring
 
 **Purpose**: Express process items via equipment motor current load patterns
 
@@ -147,7 +147,7 @@ Join alarm_his.alarm_def_id with alarm_cfg for severity, description
 
 ---
 
-### 2.2 Equipment Status Transition Trend
+### 2.2 📊 Equipment Status Transition Trend
 
 **Purpose**: Visualize Operating→Idle→Stopped→Fault status transition flow
 
@@ -159,7 +159,7 @@ Join alarm_his.alarm_def_id with alarm_cfg for severity, description
 
 ---
 
-### 2.3 Multi-equipment Comparison View
+### 2.3 ⚖️ Multi-equipment Comparison View
 
 **Purpose**: Compare main KPI/alarm proportion across identical equipment
 
@@ -170,7 +170,7 @@ Join alarm_his.alarm_def_id with alarm_cfg for severity, description
 
 ---
 
-### 2.4 Multi-time-series Trend
+### 2.4 📉 Multi-time-series Trend
 
 **Purpose**: Multi-select by period, worker, part number, sensor; charts with zoom/pan
 
@@ -182,7 +182,7 @@ Call in parallel for multiple sensor_id/equip_id, overlay time series on chart
 
 ---
 
-### 2.5 4M1E & PQCD Correlation Analysis
+### 2.5 🔗 4M1E & PQCD Correlation Analysis
 
 **Purpose**: Visualize correlation between Machine/Man/Material/Method changes and Quality/Productivity
 
@@ -198,7 +198,7 @@ Aggregate by period on client, then run correlation analysis/charts
 
 ---
 
-### 2.6 Golden Batch Comparison
+### 2.6 ⭐ Golden Batch Comparison
 
 **Purpose**: Project standard data pattern from normal operation onto chart background, compare deviation with current data
 
@@ -209,7 +209,7 @@ Aggregate by period on client, then run correlation analysis/charts
 
 ---
 
-### 2.7 Data Export
+### 2.7 📤 Data Export
 
 **Purpose**: Extract analyzed data to CSV
 
@@ -217,7 +217,7 @@ Convert query API results to CSV. Example: measurement → `time,equip_id,sensor
 
 ---
 
-### 2.8 Main Process Data Analysis Monitoring
+### 2.8 🔬 Main Process Data Analysis Monitoring
 
 **Purpose**: Visualize analysis patterns and anomalies (hot plate temp, mold vacuum, etc.)
 
@@ -228,9 +228,9 @@ Convert query API results to CSV. Example: measurement → `time,equip_id,sensor
 
 ---
 
-## 03. Maintenance & Health
+## 03. 🔧 Maintenance & Health
 
-### 3.1 Heating Rod Disconnection Monitoring
+### 3.1 🔌 Heating Rod Disconnection Monitoring
 
 **Purpose**: Show heating rod disconnection count per station on line equipment layout
 
@@ -240,7 +240,7 @@ Convert query API results to CSV. Example: measurement → `time,equip_id,sensor
 
 ---
 
-### 3.2 Collected Sensor Anomaly Status View
+### 3.2 📡 Collected Sensor Anomaly Status View
 
 **Purpose**: Display sensor power supply, data collection anomalies, etc.
 
@@ -251,7 +251,7 @@ Convert query API results to CSV. Example: measurement → `time,equip_id,sensor
 
 ---
 
-### 3.3 Parts Life Cycle
+### 3.3 ⏱️ Parts Life Cycle
 
 **Purpose**: Visualize consumable usage and replacement cycle (%), advance notice for replacement
 
@@ -259,7 +259,7 @@ Convert query API results to CSV. Example: measurement → `time,equip_id,sensor
 | ------ | ------ |
 | parts_mst | `curl "{{BASE}}/parts_mst?equip_id=1"` |
 
-**Formula**: `Usage(%) = current_usage_hours / spec_lifespan_hours * 100`
+**📐 Formula**: `Usage(%) = current_usage_hours / spec_lifespan_hours * 100`
 
 ---
 
@@ -276,7 +276,7 @@ Build timeline from maint_his.start_time, end_time, alarm_his_id
 
 ---
 
-### 3.5 Downtime Analysis by Cause
+### 3.5 📊 Downtime Analysis by Cause
 
 **Purpose**: Pareto by non-operating reason, MTBF, MTTR statistics
 
@@ -287,7 +287,7 @@ Build timeline from maint_his.start_time, end_time, alarm_his_id
 
 ---
 
-### 3.6 Equipment History Card & Life Cycle
+### 3.6 📜 Equipment History Card & Life Cycle
 
 **Purpose**: Basic specs, maintenance history, movement/modification, life cycle curve
 
@@ -311,7 +311,7 @@ Alert when `current_usage_hours / spec_lifespan_hours` exceeds threshold (e.g. 9
 
 ---
 
-### 3.8 Sensor Status
+### 3.8 📶 Sensor Status
 
 **Purpose**: Display sensor connection and data normality
 
@@ -322,9 +322,9 @@ Alert when `current_usage_hours / spec_lifespan_hours` exceeds threshold (e.g. 9
 
 ---
 
-## 04. Production Log
+## 04. 📦 Production Log
 
-### 4.1 Production Performance Trend
+### 4.1 📈 Production Performance Trend
 
 **Purpose**: Bar/line graph of UPH, Lot good rate, average cycle time
 
@@ -336,7 +336,7 @@ Alert when `current_usage_hours / spec_lifespan_hours` exceeds threshold (e.g. 9
 
 ---
 
-### 4.2 Quality Statistics Management
+### 4.2 📐 Quality Statistics Management
 
 **Purpose**: Mean and standard deviation trend of inspection values (dimension, weight), process capability
 
@@ -349,7 +349,7 @@ Compute mean, std dev on client
 
 ---
 
-### 4.3 Defect Cause Analysis
+### 4.3 📊 Defect Cause Analysis
 
 **Purpose**: Pareto chart of defect type frequency by period
 
@@ -368,7 +368,7 @@ const pareto = Object.entries(byCode).map(([id,qty]) => ({ codeId:id, qty })).so
 
 ---
 
-### 4.4 Production History Query
+### 4.4 🔍 Production History Query
 
 **Purpose**: On product/model click, show linked equipment sensor and process conditions at that time
 
@@ -379,9 +379,9 @@ const pareto = Object.entries(byCode).map(([id,qty]) => ({ codeId:id, qty })).so
 
 ---
 
-## 99. Settings
+## 99. ⚙️ Settings
 
-### 99.1 Static Management Variables
+### 99.1 🔧 Static Management Variables
 
 **Purpose**: Configure IP, Port, Line number, etc.
 
@@ -400,7 +400,7 @@ const pareto = Object.entries(byCode).map(([id,qty]) => ({ codeId:id, qty })).so
 
 ---
 
-### 99.3 User Permission Management
+### 99.3 👤 User Permission Management
 
 **Purpose**: Differentiate permissions by worker/engineer/administrator
 
@@ -417,4 +417,4 @@ const pareto = Object.entries(byCode).map(([id,qty]) => ({ codeId:id, qty })).so
 | work_date | YYYY-MM-DD | work_date=2025-01-01 |
 | time_from, time_to | ISO 8601 | time_from=2025-01-01T00:00:00%2B09:00 |
 
-> URL encoding: `+` → `%2B`, watch for spaces etc.
+> 🔗 URL encoding: `+` → `%2B`, watch for spaces etc.
