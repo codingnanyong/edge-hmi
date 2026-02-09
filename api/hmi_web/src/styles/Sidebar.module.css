@@ -1,0 +1,190 @@
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.header:hover,
+.header:focus,
+.header:hover *,
+.header:focus * {
+  text-decoration: none;
+}
+
+.headerIcon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 0.625rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.nav::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+.navGroup {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.navGroup:last-child {
+  margin-bottom: 0;
+}
+
+.navGroupTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navLink:hover {
+  background: var(--bg-tertiary);
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.navLinkActive {
+  background: var(--accent-muted);
+  color: var(--accent-active);
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: calc(0.75rem - 3px);
+}
+
+.navLinkActive:hover {
+  background: var(--accent-muted);
+  color: var(--accent-active);
+}
+
+.linkText {
+  flex: 1;
+  min-width: 0;
+}
+
+.chevron {
+  font-size: 1rem;
+  color: var(--accent);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.navLink:not(.navLinkActive) .chevron {
+  opacity: 0;
+}
+
+.navLink:hover .chevron {
+  opacity: 0.6;
+}
+
+.navLinkActive .chevron {
+  opacity: 1;
+  color: var(--accent-active);
+}
+
+.serviceLink .linkText {
+  font-size: 0.875rem;
+}
+
+.serviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.serviceList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.serviceList::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}

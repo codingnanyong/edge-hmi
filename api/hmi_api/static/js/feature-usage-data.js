@@ -77,9 +77,15 @@ const FEATURE_USAGE = {
       id: "02",
       title: "Process & Trend",
       features: [
-        { id: "2.1", title: "Standard Work Compliance", purpose: "Motor current load patterns", steps: [{ api: "sensor_mst, measurement", curl: "Filter by sensor_id, time_from, time_to" }] },
+        { id: "2.1", title: "Standard Work Compliance", purpose: "Motor current load patterns", steps: [
+          { api: "sensor_mst", curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
+          { api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=3&time_from=...&time_to=..."' },
+        ]},
         { id: "2.2", title: "Status Transition Trend", purpose: "Operating→Idle→Stopped→Fault", steps: [{ api: "status_his", curl: 'curl "{{BASE}}/status_his?equip_id=1&start_time_from=...&start_time_to=..."' }] },
-        { id: "2.3", title: "Multi-equipment Comparison", purpose: "Compare KPI/alarm across equipment", steps: [{ api: "kpi_sum, alarm_his", curl: "Query per equip_id" }] },
+        { id: "2.3", title: "Multi-equipment Comparison", purpose: "Compare KPI/alarm across equipment", steps: [
+          { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+        ]},
         { id: "2.4", title: "Multi-time-series Trend", purpose: "Period/worker/part/sensor charts", steps: [{ api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2&time_from=...&time_to=...&limit=1000"' }] },
       ],
     },
@@ -88,15 +94,26 @@ const FEATURE_USAGE = {
       title: "Maintenance & Health",
       features: [
         { id: "3.3", title: "Parts Life Cycle", purpose: "Usage %, replacement notice", steps: [{ api: "parts_mst", curl: 'curl "{{BASE}}/parts_mst?equip_id=1"' }], formula: "Usage(%) = current_usage_hours / spec_lifespan_hours * 100" },
-        { id: "3.4", title: "Fault/Repair Timeline", purpose: "Fault occurrence → action completion", steps: [{ api: "maint_his, alarm_his", curl: "Query by equip_id" }] },
-        { id: "3.5", title: "Downtime Analysis", purpose: "Pareto, MTBF, MTTR", steps: [{ api: "kpi_sum, alarm_his, alarm_cfg", curl: "" }] },
+        { id: "3.4", title: "Fault/Repair Timeline", purpose: "Fault occurrence → action completion", steps: [
+          { api: "maint_his", curl: 'curl "{{BASE}}/maint_his?equip_id=1"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+        ]},
+        { id: "3.5", title: "Downtime Analysis", purpose: "Pareto, MTBF, MTTR", steps: [
+          { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+          { api: "alarm_cfg", curl: 'curl "{{BASE}}/alarm_cfg"' },
+        ]},
       ],
     },
     {
       id: "04",
       title: "Production Log",
       features: [
-        { id: "4.1", title: "Production Performance", purpose: "UPH, Lot good rate, cycle time", steps: [{ api: "kpi_sum, prod_his, kpi_cfg", curl: "" }] },
+        { id: "4.1", title: "Production Performance", purpose: "UPH, Lot good rate, cycle time", steps: [
+          { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
+          { api: "prod_his", curl: 'curl "{{BASE}}/prod_his?work_order_id=1"' },
+          { api: "kpi_cfg", curl: 'curl "{{BASE}}/kpi_cfg"' },
+        ]},
         { id: "4.3", title: "Defect Cause Analysis", purpose: "Pareto by defect type", steps: [{ api: "defect_his, defect_code_mst", curl: 'curl "{{BASE}}/defect_his?limit=500"' }] },
       ],
     },

@@ -1,0 +1,151 @@
+.page {
+  max-width: min(1200px, 100%);
+}
+
+.hero {
+  margin-bottom: 2rem;
+}
+
+.pageTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.stats {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+.version {
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.muted {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.quickLinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.quickLinkCard {
+  flex-direction: row;
+  align-items: center;
+  min-height: 96px;
+  gap: 1rem;
+}
+
+.quickLinkCard .cardIcon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.quickLinkCard .cardContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.quickLinkCard .chevron {
+  position: static;
+  flex-shrink: 0;
+}
+
+.section {
+  margin-bottom: 2.25rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.sectionDesc {
+  margin: 0 0 1.125rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.125rem;
+}
+
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  padding: 1.375rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s;
+  border-left: 4px solid var(--accent);
+  position: relative;
+  min-height: 88px;
+}
+
+.serviceCard:hover {
+  border-color: var(--border-strong);
+  border-left-color: var(--accent);
+  box-shadow: var(--shadow-card-hover);
+  background: var(--bg-card-hover);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.cardTitle {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+  line-height: 1.4;
+}
+
+.cardDesc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.chevron {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.5rem;
+  font-size: 1.125rem;
+  color: var(--accent);
+  font-weight: 400;
+  opacity: 0.8;
+}
