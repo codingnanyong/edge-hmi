@@ -80,8 +80,7 @@ To swap only API images to a new version (e.g. v1.0.2) and **keep DB data**:
 
 ## 📚 Docs
 
-- **API-USAGE.md** — API overview, endpoint summary
-- **FEATURE-USAGE.md** — Per-feature usage (Overview, Process & Trend, Maintenance & Health, Production Log, Settings). See project root `../FEATURE-USAGE.md` for full content.
+- **FEATURE-USAGE.md** — Feature-to-API usage (overview, endpoints, curl examples, common params). See project root `../FEATURE-USAGE.md`.
 
 ## 🛑 Stop & cleanup
 
