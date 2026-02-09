@@ -1,5 +1,10 @@
 # 🗄️ Edge HMI Database
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL-336791?logo=postgresql&logoColor=white)](https://www.timescale.com/)
+[![Docker](https://img.shields.io/badge/Docker-supported-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![pg_cron](https://img.shields.io/badge/pg__cron-scheduler-336791)](https://github.com/citusdata/pg_cron)
+
 TimescaleDB-based database for industrial monitoring and maintenance systems.
 
 ## 🛡️ Data Protection
@@ -41,9 +46,10 @@ cd db
 # Example variable names only — set your own values.
 ```
 
-- `POSTGRES_DB`: Database name
-- `POSTGRES_USER` / `POSTGRES_PASSWORD`: DB credentials (use a strong password)
-- `TZ`: Timezone (e.g. `UTC`, `Asia/Seoul`)
+- 📂 `POSTGRES_DB`: Database name
+- 👤 `POSTGRES_USER` / 🔐 `POSTGRES_PASSWORD`: DB credentials (use a strong password)
+- 📋 `POSTGRES_SCHEMA`: Schema name (e.g. `core`); must match `init-db.sql`
+- 🕐 `TZ`: Timezone (e.g. `UTC`, `Asia/Seoul`)
 
 ### 2. 🚀 Run
 
@@ -78,13 +84,13 @@ psql -h localhost -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
 
 On another server with only the pulled image, you can view or extract `init-db.sql`.
 
-Paths in image (run order 01 → 02; pg_cron setup is in the Dockerfile)
+Paths in image (run order 01 → 02; pg_cron setup is in the Dockerfile):
 
-- `init-db.sql` → `/docker-entrypoint-initdb.d/01-init-db.sql`
-- `kpi-scheduler.sql` → `/docker-entrypoint-initdb.d/02-kpi-scheduler.sql`
-- `docker-compose.yml` (reference) → `/opt/edge-hmi-db/docker-compose.yml`
+- 📄 `init-db.sql` → `/docker-entrypoint-initdb.d/01-init-db.sql`
+- 📄 `kpi-scheduler.sql` → `/docker-entrypoint-initdb.d/02-kpi-scheduler.sql`
+- 📄 `docker-compose.yml` (reference) → `/opt/edge-hmi-db/docker-compose.yml`
 
-### 1. View in terminal
+### View in terminal
 
 Set your registry image (e.g. from `.env` or project config). Do not hardcode internal URLs in docs or scripts.
 
@@ -93,7 +99,7 @@ export IMG="<REGISTRY_HOST>:<PORT>/btx/edge-hmi-db:latest"
 docker run --rm ${IMG} cat /docker-entrypoint-initdb.d/01-init-db.sql
 ```
 
-### 2. Extract to current directory
+### Extract to current directory
 
 ```bash
 docker run --rm $IMG cat /docker-entrypoint-initdb.d/01-init-db.sql > init-db.sql
@@ -104,38 +110,38 @@ docker run --rm $IMG cat /docker-entrypoint-initdb.d/01-init-db.sql > init-db.sq
 
 `kpi-scheduler.sql` runs right after `init-db.sql` and creates `fn_kpi_sum_calc(p_calc_date DATE)`.
 
-### Function Description
+### Function description
 
 Computes for the given date, per shift_map (shift/line/equip), using `status_his`, `prod_his`, `alarm_his`, `maint_his`, `kpi_cfg`, and stores results in `kpi_sum`:
 
-- **Availability** = Run time / Planned time
-- **Performance** = (Output × Standard cycle) / Run time
-- **Quality** = Good count / Total count
-- **OEE** = Availability × Performance × Quality
-- **MTTR** = Mean time to repair (minutes)
-- **MTBF** = Run time / Fault count (hours)
+- 📊 **Availability** = Run time / Planned time
+- 📈 **Performance** = (Output × Standard cycle) / Run time
+- ✅ **Quality** = Good count / Total count
+- 🎯 **OEE** = Availability × Performance × Quality
+- 🔧 **MTTR** = Mean time to repair (minutes)
+- ⏱️ **MTBF** = Run time / Fault count (hours)
 
 ### ⏰ Scheduling
 
-**Default: pg_cron** (included in image)
+#### Default: pg_cron (included in image)
 
 The image includes pg_cron, which automatically runs daily at 01:00 to compute the previous day's KPI.
 
-**Restart after first run:**
+#### Restart after first run
 
 ```bash
 # Restart container after first build/run to apply pg_cron
-docker-compose restart
+docker compose restart
 ```
 
-**Check pg_cron status:**
+#### Check pg_cron status
 
 ```bash
 # List registered jobs (jobid, schedule, command). Use your POSTGRES_USER and POSTGRES_DB.
 docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT jobid, schedule, command FROM cron.job;"
 ```
 
-**Verify job execution:**
+#### Verify job execution
 
 pg_cron 1.6 does **not** have `cron.job_run_details`. The run history table exists only in newer/cloud variants.
 
@@ -148,7 +154,7 @@ SELECT calc_date, COUNT(*) FROM core.kpi_sum WHERE calc_date = CURRENT_DATE - 1 
 
 Rows present = job ran for that date. None = not run or no source data (e.g. `shift_map`).
 
-**Manual run:**
+#### Manual run
 
 ```bash
 # Compute for a specific date
@@ -158,7 +164,7 @@ docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT fn
 docker exec hmi-db-postgres psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
 ```
 
-**Alternative: Host cron** (without pg_cron)
+#### Alternative: Host cron (without pg_cron)
 
 If pg_cron is not available, use host cron (use your `POSTGRES_USER` and `POSTGRES_DB`):
 
