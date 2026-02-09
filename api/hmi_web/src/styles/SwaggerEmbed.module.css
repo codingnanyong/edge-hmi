@@ -1,0 +1,17 @@
+.wrapper {
+  width: 100%;
+  max-width: 100%;
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.loading {
+  color: var(--text-secondary);
+}
+
+.swagger {
+  --swagger-ui-font-size: 14px;
+}

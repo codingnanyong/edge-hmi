@@ -1,0 +1,233 @@
+.page {
+  max-width: min(1200px, 100%);
+}
+
+.sectionLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.purpose + .sectionLabel {
+  margin-top: 0;
+}
+
+.title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin: 0 0 2rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.group {
+  margin-bottom: 2.5rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.tableWrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.thCategory,
+.thFunction,
+.thOverview,
+.thSource,
+.thLogic {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.thCategory { width: 5rem; }
+.thFunction { width: 10rem; }
+.thSource { width: 11rem; }
+.thLogic { min-width: 12rem; }
+
+.tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tdCategory,
+.tdFunction,
+.tdOverview,
+.tdSource,
+.tdLogic {
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+  color: var(--text-primary);
+}
+
+.tdCategory {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.featureToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.featureToggle:hover {
+  text-decoration: underline;
+}
+
+.dataSource {
+  font-size: 0.8125rem;
+  font-family: ui-monospace, monospace;
+  color: var(--text-secondary);
+}
+
+.tdLogic {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.groupTitle {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.feature {
+  margin-bottom: 1.75rem;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.featureTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.featureId {
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.purpose {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.steps {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.steps li {
+  margin-bottom: 0.75rem;
+}
+
+.steps li:last-child {
+  margin-bottom: 0;
+}
+
+.api {
+  display: inline-block;
+  min-width: 140px;
+  margin-right: 0.5rem;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.curl {
+  display: block;
+  margin-top: 0.25rem;
+  margin-left: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.formulaBlock,
+.logicBlock,
+.noteBlock {
+  margin: 0.6rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+}
+
+.formulaBlock .label,
+.logicBlock .label,
+.noteBlock .label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.code {
+  margin: 0.6rem 0 0;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
+}

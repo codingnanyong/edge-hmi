@@ -1,53 +1,42 @@
-"""hmi-api: 게이트웨이. Docker-compose 테이블 API 컨테이너(line_mst, equip_mst, …)로 프록시."""
-from pathlib import Path
-
+"""hmi-api: 프록시 전용 게이트웨이. 웹 UI는 hmi_web(React)에서 제공."""
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
-from hmi_api.config import APP_VERSION, TABLE_SERVICES, settings
+from hmi_api.config import APP_VERSION, TABLE_SERVICES
 from hmi_api.proxy import fetch_openapi, proxy_to_table
 
 app = FastAPI(
     title="Edge HMI API",
-    description="게이트웨이: line_mst, equip_mst 등 테이블 API 컨테이너로 프록시",
+    description="프록시 전용: line_mst, equip_mst 등 테이블 API 컨테이너로 프록시",
     version=APP_VERSION,
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
 
-_STATIC = Path(__file__).parent / "static"
-_HTML_PAGES = {
-    "swagger": _STATIC / "html" / "swagger-ui.html",
-    "feature_usage": _STATIC / "html" / "feature-usage.html",
-}
-
-app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
 async def root():
-    """루트 = Felt Montrg 스타일 통합 Swagger UI (Docker-compose)."""
-    return FileResponse(_HTML_PAGES["swagger"], media_type="text/html")
-
-
-@app.get("/swagger", include_in_schema=False)
-async def swagger_alias():
-    """Swagger UI 별칭."""
-    return FileResponse(_HTML_PAGES["swagger"], media_type="text/html")
-
-
-@app.get("/docs", include_in_schema=False)
-async def docs_redirect():
-    """FastAPI 기본 docs → Swagger UI 리다이렉트."""
-    return RedirectResponse(url="/", status_code=302)
-
-
-@app.get("/feature-usage", include_in_schema=False)
-async def feature_usage():
-    """Feature API usage guide (FEATURE-USAGE.md rendered as HTML)."""
-    return FileResponse(_HTML_PAGES["feature_usage"], media_type="text/html")
+    """API 게이트웨이 루트. 웹 UI는 hmi_web 서비스."""
+    return {
+        "service": "Edge HMI API Gateway",
+        "version": APP_VERSION,
+        "role": "proxy-only",
+        "web_ui": "hmi_web (React, separate service)",
+        "endpoints": {
+            "openapi": "/openapi.json",
+            "info": "/info",
+            "health": "/health",
+        },
+    }
 
 
 @app.get("/health")
@@ -57,21 +46,17 @@ def health():
 
 @app.get("/info", include_in_schema=False)
 async def service_info():
-    """서비스 정보 (기존 동작 서비스 /info 패턴)."""
+    """서비스 정보."""
     return {
         "service": "Edge HMI API Gateway",
         "version": APP_VERSION,
         "status": "running",
-        "swagger_ui_url": "/",
-        "integrated_api_docs": "/openapi.json",
+        "role": "proxy-only",
         "integrated_services_count": len(TABLE_SERVICES),
         "services": list(TABLE_SERVICES),
         "available_endpoints": {
-            "/": "Swagger UI (main)",
-            "/swagger": "Swagger UI (alias)",
-            "/feature-usage": "Feature API usage guide",
-            "/info": "Service information",
             "/openapi.json": "OpenAPI specification",
+            "/info": "Service information",
             "/health": "Health check",
         },
     }
@@ -79,7 +64,7 @@ async def service_info():
 
 @app.get("/openapi.json")
 async def openapi_aggregated():
-    """각 테이블 서비스 openapi.json 수집 후 병합. (유일한 OpenAPI 소스)"""
+    """각 테이블 서비스 openapi.json 수집 후 병합."""
     paths: dict = {}
     tags: list = []
     seen_tags: set = set()
@@ -108,9 +93,9 @@ async def openapi_aggregated():
         "openapi": "3.0.3",
         "x-source": "gateway-aggregated",
         "info": {
-            "title": "🏭 Edge HMI API Documentation",
+            "title": "Edge HMI API Documentation",
             "version": APP_VERSION,
-            "description": f"게이트웨이 (테이블 API 프록시). Total {len(tags)} tables integrated.",
+            "description": f"프록시 게이트웨이. Total {len(tags)} tables integrated.",
         },
         "paths": paths,
         "tags": tags,
