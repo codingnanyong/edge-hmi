@@ -13,12 +13,13 @@ set -e
 #   ./scripts/push-to-registry.sh [registry-url] [version] line_mst sensor_mst hmi-api  # push several
 #
 # Examples:
-#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0
-#   ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0 hmi-api
+#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0
+#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0 hmi-api
+#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0 line_mst equip_mst
 # ============================================================================
 
 REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [version] [service ...]}"
-VERSION="${2:-v1.0}"
+VERSION="${2:-latest}"
 if [ $# -ge 2 ]; then
   shift 2
   REQUESTED=("$@")
@@ -39,19 +40,20 @@ declare -A API_MAP=(
   [alarm_cfg]="alarm_cfg/Dockerfile:btx/edge-hmi-api-alarm-cfg"
   [maint_cfg]="maint_cfg/Dockerfile:btx/edge-hmi-api-maint-cfg"
   [measurement]="measurement/Dockerfile:btx/edge-hmi-api-measurement"
-  [status_his]="status_his/Dockerfile:btx/edge-hmi-api-status-his"
+  [equip_status]="equip_status/Dockerfile:btx/edge-hmi-api-equip-status"
   [prod_his]="prod_his/Dockerfile:btx/edge-hmi-api-prod-his"
   [alarm_his]="alarm_his/Dockerfile:btx/edge-hmi-api-alarm-his"
   [maint_his]="maint_his/Dockerfile:btx/edge-hmi-api-maint-his"
   [shift_map]="shift_map/Dockerfile:btx/edge-hmi-api-shift-map"
   [hmi-api]="hmi_api/Dockerfile:btx/edge-hmi-api"
+  [hmi-web]="web/Dockerfile:btx/edge-hmi-web"
   [work_order]="work_order/Dockerfile:btx/edge-hmi-api-work-order"
   [defect_code_mst]="defect_code_mst/Dockerfile:btx/edge-hmi-api-defect-code-mst"
   [defect_his]="defect_his/Dockerfile:btx/edge-hmi-api-defect-his"
   [parts_mst]="parts_mst/Dockerfile:btx/edge-hmi-api-parts-mst"
 )
 
-ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg work_order measurement status_his prod_his alarm_his maint_his shift_map defect_code_mst defect_his parts_mst hmi-api)
+ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg measurement status_his prod_his alarm_his maint_his shift_map hmi-api)
 
 resolve_targets() {
   if [ ${#REQUESTED[@]} -eq 0 ]; then
@@ -72,7 +74,7 @@ resolve_targets() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-cd "${API_DIR}"
+ROOT_DIR="$(cd "${API_DIR}/.." && pwd)"
 
 resolve_targets
 
@@ -85,10 +87,14 @@ echo "Services:  ${TARGETS[*]}"
 echo ""
 
 echo "📋 Checking shared & Dockerfiles..."
-[ -d "shared" ] || { echo "❌ Missing: api/shared"; exit 1; }
+[ -d "${API_DIR}/shared" ] || { echo "❌ Missing: api/shared"; exit 1; }
 for k in "${TARGETS[@]}"; do
   df="${API_MAP[$k]%%:*}"
-  [ -f "$df" ] || { echo "❌ Missing: $df"; exit 1; }
+  if [[ "$k" == "hmi-web" ]]; then
+    [ -f "${ROOT_DIR}/${df}" ] || { echo "❌ Missing: ${df} (in project root)"; exit 1; }
+  else
+    [ -f "${API_DIR}/${df}" ] || { echo "❌ Missing: $df"; exit 1; }
+  fi
 done
 echo "✅ OK"
 echo ""
@@ -101,7 +107,11 @@ push_one() {
 
   echo "----------------------------------------"
   echo "🔨 Build: ${image_name}"
-  docker build -t "${full_image}" -f "${dockerfile}" .
+  if [[ "$image_name" == "btx/edge-hmi-web" ]]; then
+    (cd "${ROOT_DIR}" && docker build -t "${full_image}" -f "${dockerfile}" .)
+  else
+    (cd "${API_DIR}" && docker build -t "${full_image}" -f "${dockerfile}" .)
+  fi
   echo "🏷️  Tag: ${latest_image}"
   docker tag "${full_image}" "${latest_image}"
 

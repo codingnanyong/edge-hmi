@@ -11,7 +11,7 @@ const DESC = {
   parts_mst: '부품 마스터 - 부품/소모품 수명 관리 API',
   defect_code_mst: '불량 사유 코드 - 불량 유형 정의 API',
   measurement: '측정값 - 시계열 측정 데이터 API (hypertable)',
-  status_his: '상태 이력 - 설비 상태 이력 API',
+  equip_status: '설비 상태 이력 - equip_status 구간 이력 API',
   prod_his: '생산 이력 - 생산 실적 이력 API',
   defect_his: '불량 이력 - 불량 상세(사유별 수량) API',
   alarm_his: '알람 이력 - 알람 발생 이력 API',

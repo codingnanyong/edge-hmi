@@ -6,24 +6,24 @@
 SET search_path TO core, public;
 
 -- ----------------------------------------------------------------------------
--- 1. line_mst
+-- 1. line_mst (process_type, line_name: no NULL)
 -- ----------------------------------------------------------------------------
-INSERT INTO line_mst (line_code, line_name) VALUES
-  ('L001', 'Assembly Line 1'),
-  ('L002', 'Assembly Line 2')
+INSERT INTO line_mst (line_code, line_name, process_type) VALUES
+  ('L001', 'Assembly Line 1', 'assembly'),
+  ('L002', 'Assembly Line 2', 'assembly')
 ON CONFLICT (line_code) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- 2. equip_mst (line_id -> line_mst)
+-- 2. equip_mst (line_id -> line_mst; type, install_date: no NULL)
 -- ----------------------------------------------------------------------------
-INSERT INTO equip_mst (line_id, equip_code, name, type)
-SELECT id, 'EQ01', 'Conveyor A', 'Conveyor' FROM line_mst WHERE line_code = 'L001' LIMIT 1
+INSERT INTO equip_mst (line_id, equip_code, name, type, install_date)
+SELECT id, 'EQ01', 'Conveyor A', 'Conveyor', '2024-01-15'::date FROM line_mst WHERE line_code = 'L001' LIMIT 1
 ON CONFLICT (equip_code) DO NOTHING;
-INSERT INTO equip_mst (line_id, equip_code, name, type)
-SELECT id, 'EQ02', 'Robot Welder 1', 'Robot' FROM line_mst WHERE line_code = 'L001' LIMIT 1
+INSERT INTO equip_mst (line_id, equip_code, name, type, install_date)
+SELECT id, 'EQ02', 'Robot Welder 1', 'Robot', '2024-02-01'::date FROM line_mst WHERE line_code = 'L001' LIMIT 1
 ON CONFLICT (equip_code) DO NOTHING;
-INSERT INTO equip_mst (line_id, equip_code, name, type)
-SELECT id, 'EQ03', 'Inspection Station', 'Vision' FROM line_mst WHERE line_code = 'L002' LIMIT 1
+INSERT INTO equip_mst (line_id, equip_code, name, type, install_date)
+SELECT id, 'EQ03', 'Inspection Station', 'Vision', '2024-03-01'::date FROM line_mst WHERE line_code = 'L002' LIMIT 1
 ON CONFLICT (equip_code) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
@@ -77,12 +77,21 @@ SELECT id, 6.0, 95.0 FROM equip_mst WHERE equip_code = 'EQ03' LIMIT 1
 ON CONFLICT (equip_id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- 7. alarm_cfg
+-- 7. alarm_cfg (lower_limit, upper_limit, delay_time_sec, alarm_type, description: no NULL)
 -- ----------------------------------------------------------------------------
-INSERT INTO alarm_cfg (alarm_code, severity, description) VALUES
-  ('OVER_TEMP', 'Critical', 'Temperature exceeds upper limit'),
-  ('OVER_VIB',  'Warning',  'Vibration above threshold'),
-  ('CYCLE_ERR', 'Info',     'Cycle time deviation')
+INSERT INTO alarm_cfg (
+  alarm_code,
+  lower_limit,
+  upper_limit,
+  delay_time_sec,
+  alarm_type,
+  is_active,
+  description
+)
+VALUES
+  ('OVER_TEMP',  -999.0,    28.0,  5,  'SPEC_OUT',    TRUE, 'Temperature exceeds upper limit'),
+  ('OVER_VIB',   -999.0,    10.0, 10,  'SPEC_OUT',    TRUE, 'Vibration above threshold'),
+  ('CYCLE_ERR',  0.0,       9999.0, 30, 'CONTROL_OUT', TRUE, 'Cycle time deviation')
 ON CONFLICT (alarm_code) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
@@ -113,7 +122,7 @@ INSERT INTO parts_mst (equip_id, part_name, spec_lifespan_hours, current_usage_h
 SELECT e.id, 'Motor Brush', 2000.0, 800.0, '2024-11-15 00:00:00+09'
   FROM equip_mst e WHERE e.equip_code = 'EQ02' LIMIT 1;
 INSERT INTO parts_mst (equip_id, part_name, spec_lifespan_hours, current_usage_hours, last_replacement_date)
-SELECT e.id, 'Lens Assembly', 10000.0, 500.0, NULL
+SELECT e.id, 'Lens Assembly', 10000.0, 500.0, '2024-06-01 00:00:00+09'
   FROM equip_mst e WHERE e.equip_code = 'EQ03' LIMIT 1;
 
 -- ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useLocale } from '@/contexts/LocaleContext'
-import { TABLE_SERVICES } from '@/constants'
+import { FOOTER, TABLE_SERVICES } from '@/constants'
 import { SERVICE_INFO } from '@/i18n/translations'
 import { NAV_ITEMS, PATHS } from '@/routes'
 import styles from '@/styles/Sidebar.module.css'
@@ -57,6 +57,24 @@ export function Sidebar() {
           </div>
         </div>
       </nav>
+
+      <footer className={styles.footer}>
+        <span className={styles.footerLabel}>👤 {t('sidebar.author')}</span>
+        <a
+          href={`mailto:${FOOTER.email}`}
+          className={styles.footerLink}
+        >
+          ✍️ {FOOTER.author}
+        </a>
+        <a
+          href={FOOTER.giteaUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.footerLink}
+        >
+          🐙 {t('sidebar.gitea')}
+        </a>
+      </footer>
     </aside>
   )
 }

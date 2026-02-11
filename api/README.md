@@ -19,7 +19,7 @@ api/
 │       └── js/
 ├── line_mst/, equip_mst/, sensor_mst/, worker_mst/, work_order/, parts_mst/,
 │   defect_code_mst/, defect_his/, kpi_sum/, kpi_cfg/, alarm_cfg/, alarm_his/,
-│   maint_cfg/, maint_his/, measurement/, status_his/, prod_his/, shift_cfg/, shift_map/
+│   maint_cfg/, maint_his/, measurement/, equip_status/, prod_his/, shift_cfg/, shift_map/
 ├── scripts/
 │   └── push-to-registry.sh
 └── README.md
@@ -49,7 +49,7 @@ docker compose up -d --build
 | alarm_cfg       | 8008   |
 | maint_cfg       | 8009   |
 | measurement     | 8010   |
-| status_his      | 8011   |
+| equip_status    | 8011   |
 | prod_his        | 8012   |
 | alarm_his       | 8013   |
 | maint_his       | 8014   |
@@ -99,7 +99,7 @@ cd edge-hmi/api
 
 - 📍 **registry-url** (required): Private Registry address (e.g. `host:5000`). Do not hardcode internal URLs.
 - 🏷️ **version** (default `v1.0`): Version tag. `latest` is also updated with the same build.
-- 📦 **services**: one or more of `line_mst`, `equip_mst`, `sensor_mst`, `kpi_sum`, `worker_mst`, `shift_cfg`, `kpi_cfg`, `alarm_cfg`, `maint_cfg`, `measurement`, `status_his`, `prod_his`, `defect_code_mst`, `defect_his`, `alarm_his`, `maint_his`, `shift_map`, `work_order`, `parts_mst`, `hmi-api`
+- 📦 **services**: one or more of `line_mst`, `equip_mst`, `sensor_mst`, `kpi_sum`, `worker_mst`, `shift_cfg`, `kpi_cfg`, `alarm_cfg`, `maint_cfg`, `measurement`, `equip_status`, `prod_his`, `defect_code_mst`, `defect_his`, `alarm_his`, `maint_his`, `shift_map`, `work_order`, `parts_mst`, `hmi-api`
 
 ### Examples
 

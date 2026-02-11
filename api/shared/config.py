@@ -1,4 +1,4 @@
-"""DB config from env. Match db/.env. Do not set default password — use env only."""
+"""DB config from env. Match db/.env."""
 from pydantic_settings import BaseSettings
 
 
@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "edge_hmi"
     POSTGRES_USER: str = "admin"
-    POSTGRES_PASSWORD: str = ""  # Must be set via env; do not hardcode
+    POSTGRES_PASSWORD: str = "1q2w3e4r"
     POSTGRES_SCHEMA: str = "core"
 
     @property

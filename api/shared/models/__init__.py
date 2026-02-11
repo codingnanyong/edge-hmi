@@ -4,6 +4,7 @@ from shared.models.tables import (
     DefectCodeMst,
     DefectHis,
     EquipMst,
+    EquipStatus,
     KpiCfg,
     KpiSum,
     LineMst,
@@ -15,7 +16,6 @@ from shared.models.tables import (
     SensorMst,
     ShiftCfg,
     ShiftMap,
-    StatusHis,
     WorkerMst,
     WorkOrder,
 )
@@ -38,6 +38,6 @@ __all__ = [
     "DefectCodeMst",
     "DefectHis",
     "Measurement",
-    "StatusHis",
+    "EquipStatus",
     "ProdHis",
 ]

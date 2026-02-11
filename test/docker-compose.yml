@@ -1,6 +1,6 @@
 # Edge HMI — Private Registry pull test
 # All work in test/ folder. Use .env (cp .env.example .env if missing)
-#   docker login <REGISTRY_HOST>:<PORT>
+#   docker login 203.228.107.184:5000
 #   cd test && docker compose pull && docker compose up -d
 #
 # Image versions: DB_IMAGE_TAG, API_IMAGE_TAG in .env
@@ -9,7 +9,7 @@ name: edge-hmi-test
 
 services:
   db:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-db:${DB_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-db:${DB_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-db-postgres
     env_file: ./.env
@@ -29,7 +29,7 @@ services:
       retries: 5
 
   line_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-line-mst:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-line-mst:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-line-mst
     env_file: ./.env
@@ -53,7 +53,7 @@ services:
       start_period: 10s
 
   equip_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-equip-mst:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-equip-mst:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-equip-mst
     env_file: ./.env
@@ -77,7 +77,7 @@ services:
       start_period: 10s
 
   sensor_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-sensor-mst:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-sensor-mst:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-sensor-mst
     env_file: ./.env
@@ -101,7 +101,7 @@ services:
       start_period: 10s
 
   kpi_sum:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-sum:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-kpi-sum:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-kpi-sum
     env_file: ./.env
@@ -125,7 +125,7 @@ services:
       start_period: 10s
 
   worker_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-worker-mst:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-worker-mst:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-worker-mst
     env_file: ./.env
@@ -149,7 +149,7 @@ services:
       start_period: 10s
 
   shift_cfg:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-cfg:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-shift-cfg:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-shift-cfg
     env_file: ./.env
@@ -173,7 +173,7 @@ services:
       start_period: 10s
 
   kpi_cfg:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-kpi-cfg:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-kpi-cfg:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-kpi-cfg
     env_file: ./.env
@@ -197,7 +197,7 @@ services:
       start_period: 10s
 
   alarm_cfg:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-cfg:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-alarm-cfg:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-alarm-cfg
     env_file: ./.env
@@ -221,7 +221,7 @@ services:
       start_period: 10s
 
   maint_cfg:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-cfg:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-maint-cfg:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-maint-cfg
     env_file: ./.env
@@ -245,7 +245,7 @@ services:
       start_period: 10s
 
   work_order:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-work-order:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-work-order:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-work-order
     env_file: ./.env
@@ -269,7 +269,7 @@ services:
       start_period: 10s
 
   parts_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-parts-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-parts-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
     pull_policy: always
     container_name: hmi-api-parts-mst
     env_file: ./.env
@@ -293,7 +293,7 @@ services:
       start_period: 10s
 
   defect_code_mst:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-code-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-defect-code-mst:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
     pull_policy: always
     container_name: hmi-api-defect-code-mst
     env_file: ./.env
@@ -317,7 +317,7 @@ services:
       start_period: 10s
 
   measurement:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-measurement:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-measurement:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-measurement
     env_file: ./.env
@@ -340,10 +340,10 @@ services:
       retries: 3
       start_period: 10s
 
-  status_his:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-status-his:${API_IMAGE_TAG:-latest}
+  equip_status:
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-equip-status:${API_IMAGE_TAG:-latest}
     pull_policy: always
-    container_name: hmi-api-status-his
+    container_name: hmi-api-equip-status
     env_file: ./.env
     environment:
       - POSTGRES_HOST=db
@@ -365,7 +365,7 @@ services:
       start_period: 10s
 
   prod_his:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-prod-his:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-prod-his:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-prod-his
     env_file: ./.env
@@ -389,7 +389,7 @@ services:
       start_period: 10s
 
   alarm_his:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-alarm-his:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-alarm-his:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-alarm-his
     env_file: ./.env
@@ -413,7 +413,7 @@ services:
       start_period: 10s
 
   maint_his:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-maint-his:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-maint-his:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-maint-his
     env_file: ./.env
@@ -437,7 +437,7 @@ services:
       start_period: 10s
 
   shift_map:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-shift-map:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-shift-map:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api-shift-map
     env_file: ./.env
@@ -461,7 +461,7 @@ services:
       start_period: 10s
 
   defect_his:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api-defect-his:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api-defect-his:${API_IMAGE_TAG_NEW:-${API_IMAGE_TAG:-latest}}
     pull_policy: always
     container_name: hmi-api-defect-his
     env_file: ./.env
@@ -485,13 +485,13 @@ services:
       start_period: 10s
 
   hmi-api:
-    image: ${REGISTRY:localhost}/btx/edge-hmi-api:${API_IMAGE_TAG:-latest}
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-api:${API_IMAGE_TAG:-latest}
     pull_policy: always
     container_name: hmi-api
     environment:
       - TABLE_SERVICE_PORT=8000
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8080}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -501,6 +501,15 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  hmi-web:
+    image: ${REGISTRY:Registry ip}/btx/edge-hmi-web:${WEB_IMAGE_TAG:-${API_IMAGE_TAG:-latest}}
+    pull_policy: always
+    container_name: hmi-web
+    ports:
+      - "${WEB_PORT:-8000}:80"
+    depends_on:
+      - hmi-api
 
 volumes:
   edge_hmi_test_data:

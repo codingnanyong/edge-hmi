@@ -1,7 +1,7 @@
 -- ============================================================================
 -- KPI Summary Scheduler
 -- ============================================================================
--- Run after init-db.sql. Populates kpi_sum from status_his, prod_his, alarm_his,
+-- Run after init-db.sql. Populates kpi_sum from equip_status, prod_his, alarm_his,
 -- maint_his, shift_map, kpi_cfg per (calc_date, shift_def_id, line_id, equip_id).
 --
 -- RECOMMENDED: Use host cron (no pg_cron needed)
@@ -39,6 +39,7 @@ DECLARE
   mttr_sec FLOAT;
   mtbf_hr FLOAT;
   failure_cnt BIGINT;
+  v_work_order_id INT;
 BEGIN
   DELETE FROM kpi_sum WHERE calc_date = p_calc_date;
 
@@ -60,14 +61,14 @@ BEGIN
     END IF;
     planned_sec := EXTRACT(EPOCH FROM (win_end - win_start));
 
-    -- Run seconds (status_his: status_code = 'Run', overlap with shift window)
+    -- Run seconds (equip_status: status_code = 'Run', overlap with shift window)
     SELECT COALESCE(SUM(
       EXTRACT(EPOCH FROM (
         LEAST(COALESCE(sh.end_time, win_end), win_end) -
         GREATEST(sh.start_time, win_start)
       ))
     ), 0)::FLOAT INTO run_sec
-    FROM status_his sh
+    FROM equip_status sh
     WHERE sh.equip_id = r.equip_id
       AND sh.status_code = 'Run'
       AND sh.start_time < win_end
@@ -79,6 +80,16 @@ BEGIN
     FROM prod_his ph
     WHERE ph.equip_id = r.equip_id
       AND ph.time >= win_start AND ph.time < win_end;
+
+    -- Work order for this window: most frequent work_order_id in prod_his (ties: lowest id)
+    SELECT ph.work_order_id INTO v_work_order_id
+    FROM prod_his ph
+    WHERE ph.equip_id = r.equip_id
+      AND ph.time >= win_start AND ph.time < win_end
+      AND ph.work_order_id IS NOT NULL
+    GROUP BY ph.work_order_id
+    ORDER BY COUNT(*) DESC, ph.work_order_id ASC
+    LIMIT 1;
 
     -- Std cycle time (seconds per piece)
     SELECT kc.std_cycle_time INTO std_ct FROM kpi_cfg kc WHERE kc.equip_id = r.equip_id;
@@ -116,10 +127,10 @@ BEGIN
 
     -- UPH (Units Per Hour): good_cnt per planned shift hour
     INSERT INTO kpi_sum (
-      calc_date, shift_def_id, line_id, equip_id,
+      calc_date, shift_def_id, line_id, equip_id, work_order_id,
       availability, performance, quality, oee, mttr, mtbf, uph
     ) VALUES (
-      p_calc_date, r.shift_def_id, r.line_id, r.equip_id,
+      p_calc_date, r.shift_def_id, r.line_id, r.equip_id, v_work_order_id,
       avail, perf, qual, avail * perf * qual,
       mttr_sec, mtbf_hr,
       CASE WHEN planned_sec > 0 THEN good_cnt::FLOAT * 3600.0 / planned_sec ELSE NULL END

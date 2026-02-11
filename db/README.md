@@ -112,7 +112,7 @@ docker run --rm $IMG cat /docker-entrypoint-initdb.d/01-init-db.sql > init-db.sq
 
 ### Function description
 
-Computes for the given date, per shift_map (shift/line/equip), using `status_his`, `prod_his`, `alarm_his`, `maint_his`, `kpi_cfg`, and stores results in `kpi_sum`:
+Computes for the given date, per shift_map (shift/line/equip), using `equip_status`, `prod_his`, `alarm_his`, `maint_his`, `kpi_cfg`, and stores results in `kpi_sum`:
 
 - 📊 **Availability** = Run time / Planned time
 - 📈 **Performance** = (Output × Standard cycle) / Run time

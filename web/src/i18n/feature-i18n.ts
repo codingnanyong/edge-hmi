@@ -19,7 +19,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '1.4': {
     title: '설비 가동 상태',
     purpose: '실시간: 가동(녹색), 정지(빨강), 대기(주황), 알람(깜빡임), 고장(회색)',
-    logic: 'status_his 최신 status_code 사용, alarm_his에 진행 중 알람 있으면 Blink 처리',
+    logic: 'equip_status 최신 status_code 사용, alarm_his에 진행 중 알람 있으면 Blink 처리',
     note: 'status_code: Run, Stop, Fault. alarm_his 병합하여 알람 상태 표시',
   },
   '1.5': {
@@ -56,7 +56,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '2.2': {
     title: '상태 전이 추세',
     purpose: '가동→대기→정지→고장 타임라인',
-    logic: '특정 기간 status_his를 시간순 나열하여 간트 차트 형태로 구성',
+    logic: '특정 기간 equip_status를 시간순 나열하여 간트 차트 형태로 구성',
   },
   '2.3': {
     title: '다중 설비 비교',
@@ -144,7 +144,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
 /** English overrides for features (locale === 'en') */
 export const FEATURE_EN: Record<string, FeatureOverride> = {
   '1.4': {
-    logic: 'Use latest status_code from status_his; apply Blink if ongoing alarm in alarm_his',
+    logic: 'Use latest status_code from equip_status; apply Blink if ongoing alarm in alarm_his',
     note: 'status_code: Run, Stop, Fault. Merge alarm_his for alarm status.',
   },
   '1.5': { logic: 'Direct mapping of target_cnt, sop_link etc. from work_order table' },
@@ -157,7 +157,7 @@ export const FEATURE_EN: Record<string, FeatureOverride> = {
   '1.8': { logic: 'Load master data (equip_code, name, install_date) from equip_mst' },
   '1.9': { logic: 'Join alarm_his and alarm_cfg to map Severity and details' },
   '2.1': { logic: 'Compare measurement current with standard pattern for threshold deviation' },
-  '2.2': { logic: 'Arrange status_his chronologically as Gantt chart' },
+  '2.2': { logic: 'Arrange equip_status chronologically as Gantt chart' },
   '2.3': { logic: 'Arrange kpi_sum for multiple equip_ids in parallel for deviation analysis' },
   '2.4': { logic: 'Apply selected parameters as query filters for high-res time-series viz' },
   '2.5': {

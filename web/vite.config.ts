@@ -26,7 +26,7 @@ export default defineConfig({
       '/parts_mst': { target: 'http://localhost:8000', changeOrigin: true },
       '/defect_code_mst': { target: 'http://localhost:8000', changeOrigin: true },
       '/measurement': { target: 'http://localhost:8000', changeOrigin: true },
-      '/status_his': { target: 'http://localhost:8000', changeOrigin: true },
+      '/equip_status': { target: 'http://localhost:8000', changeOrigin: true },
       '/prod_his': { target: 'http://localhost:8000', changeOrigin: true },
       '/defect_his': { target: 'http://localhost:8000', changeOrigin: true },
       '/alarm_his': { target: 'http://localhost:8000', changeOrigin: true },
