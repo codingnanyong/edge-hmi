@@ -188,3 +188,35 @@
   background: var(--border);
   border-radius: 2px;
 }
+
+.footer {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.footerLabel {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.footerValue {
+  color: var(--text-secondary);
+}
+
+.footerLink {
+  color: var(--accent);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}

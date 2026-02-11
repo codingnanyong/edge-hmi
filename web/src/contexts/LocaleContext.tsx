@@ -96,6 +96,10 @@ const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
       title: 'API Documentation',
       loading: 'Loading OpenAPI spec…',
     },
+    sidebar: {
+      author: '제작',
+      gitea: 'Gitea 저장소',
+    },
   },
   en: {
     common: {
@@ -141,6 +145,10 @@ const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
     swaggerEmbed: {
       title: 'API Documentation',
       loading: 'Loading OpenAPI spec…',
+    },
+    sidebar: {
+      author: 'Author',
+      gitea: 'Gitea Repository',
     },
   },
 }

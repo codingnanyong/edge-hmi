@@ -6,7 +6,7 @@ set -e
 # ============================================================================
 # Pushes both [tag] and latest; latest is always updated to this build.
 # Usage: ./scripts/push-to-registry.sh [registry-url] [tag]
-# Example: ./scripts/push-to-registry.sh <REGISTRY_HOST>:<PORT> v1.0
+# Example: ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0
 # ============================================================================
 
 REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [tag]}"
@@ -26,7 +26,7 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_DIR}"
 
 echo "📋 Checking required files..."
-for f in dockerfile sql/init-db.sql sql/kpi-scheduler.sql; do
+for f in dockerfile sql/init-db.sql sql/equip-status-fn.sql sql/kpi-scheduler.sql; do
     if [ ! -e "$f" ]; then
         echo "❌ Missing: $f"
         exit 1

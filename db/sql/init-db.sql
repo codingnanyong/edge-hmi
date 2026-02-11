@@ -131,12 +131,20 @@ COMMENT ON COLUMN kpi_cfg.target_oee IS 'Target OEE';
 CREATE TABLE IF NOT EXISTS alarm_cfg (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     alarm_code VARCHAR(50) UNIQUE NOT NULL,
-    severity VARCHAR(20),
+    lower_limit FLOAT,
+    upper_limit FLOAT,
+    delay_time_sec INTEGER,
+    alarm_type VARCHAR(50),
+    is_active BOOLEAN DEFAULT TRUE,
     description TEXT
 );
-COMMENT ON TABLE alarm_cfg IS 'Alarm type definition';
-COMMENT ON COLUMN alarm_cfg.alarm_code IS 'Alarm type code';
-COMMENT ON COLUMN alarm_cfg.severity IS 'Critical, Warning, Info';
+COMMENT ON TABLE alarm_cfg IS 'Alarm configuration: thresholds and behavior per code';
+COMMENT ON COLUMN alarm_cfg.alarm_code IS 'Alarm code identifier';
+COMMENT ON COLUMN alarm_cfg.lower_limit IS 'Lower threshold value (nullable: one-sided alarm)';
+COMMENT ON COLUMN alarm_cfg.upper_limit IS 'Upper threshold value (nullable: one-sided alarm)';
+COMMENT ON COLUMN alarm_cfg.delay_time_sec IS 'Delay before raising alarm (seconds)';
+COMMENT ON COLUMN alarm_cfg.alarm_type IS 'Alarm category (SPEC_OUT, CONTROL_OUT, SYSTEM, etc.)';
+COMMENT ON COLUMN alarm_cfg.is_active IS 'Whether this alarm configuration is currently enabled';
 COMMENT ON COLUMN alarm_cfg.description IS 'Alarm description';
 
 CREATE TABLE IF NOT EXISTS maint_cfg (
@@ -214,8 +222,9 @@ COMMENT ON COLUMN measurement.equip_id IS 'Equipment';
 COMMENT ON COLUMN measurement.sensor_id IS 'Sensor';
 COMMENT ON COLUMN measurement.value IS 'Measured value';
 
--- 2.2 Status history (availability: Run/Stop/Fault)
-CREATE TABLE IF NOT EXISTS status_his (
+-- 2.2 Equipment status interval history (availability: Run/Stop/Fault)
+-- Derived from raw events in equip_status_his via trigger.
+CREATE TABLE IF NOT EXISTS equip_status (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
     status_code text,
@@ -223,12 +232,28 @@ CREATE TABLE IF NOT EXISTS status_his (
     end_time TIMESTAMPTZ,
     PRIMARY KEY (id, start_time)
 );
-SELECT create_hypertable('status_his', 'start_time', chunk_time_interval => INTERVAL '1 day', if_not_exists => TRUE);
-COMMENT ON TABLE status_his IS 'Availability (Run/Stop/Fault)';
-COMMENT ON COLUMN status_his.equip_id IS 'Equipment';
-COMMENT ON COLUMN status_his.status_code IS 'Run, Stop, Fault, etc.';
-COMMENT ON COLUMN status_his.start_time IS 'Status start (partition key)';
-COMMENT ON COLUMN status_his.end_time IS 'Status end; NULL if ongoing';
+SELECT create_hypertable('equip_status', 'start_time', chunk_time_interval => INTERVAL '1 day', if_not_exists => TRUE);
+COMMENT ON TABLE equip_status IS 'Availability intervals (Run/Stop/Fault) aggregated from equip_status_his';
+COMMENT ON COLUMN equip_status.equip_id IS 'Equipment';
+COMMENT ON COLUMN equip_status.status_code IS 'Run, Stop, Fault, etc.';
+COMMENT ON COLUMN equip_status.start_time IS 'Status start (partition key)';
+COMMENT ON COLUMN equip_status.end_time IS 'Status end; NULL if ongoing';
+
+-- 2.2a Equipment status raw history (polled/ingested events)
+-- TimescaleDB requires the partition key (capture_time) to be part of
+-- the primary key / unique index used for chunking. Use composite PK.
+CREATE TABLE IF NOT EXISTS equip_status_his (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
+    status_code text,
+    capture_time TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (id, capture_time)
+);
+SELECT create_hypertable('equip_status_his', 'capture_time', chunk_time_interval => INTERVAL '1 day', if_not_exists => TRUE);
+COMMENT ON TABLE equip_status_his IS 'Raw equipment status events as collected from field devices';
+COMMENT ON COLUMN equip_status_his.equip_id IS 'Equipment';
+COMMENT ON COLUMN equip_status_his.status_code IS 'Run, Stop, Fault, etc.';
+COMMENT ON COLUMN equip_status_his.capture_time IS 'Event capture timestamp (partition key)';
 
 -- 2.3 Production history (performance/quality)
 CREATE TABLE IF NOT EXISTS prod_his (
@@ -360,8 +385,9 @@ COMMENT ON COLUMN kpi_sum.uph IS 'Units per hour';
 -- measurement: equip- and sensor-based time-range queries
 CREATE INDEX IF NOT EXISTS idx_measurement_equip_time ON measurement (equip_id, time DESC);
 CREATE INDEX IF NOT EXISTS idx_measurement_sensor_time ON measurement (sensor_id, time DESC);
--- status_his: equipment status over time
-CREATE INDEX IF NOT EXISTS idx_status_his_equip_start ON status_his (equip_id, start_time DESC);
+-- equip_status / equip_status_his: equipment status over time
+CREATE INDEX IF NOT EXISTS idx_equip_status_equip_start ON equip_status (equip_id, start_time DESC);
+CREATE INDEX IF NOT EXISTS idx_equip_status_his_equip_time ON equip_status_his (equip_id, capture_time DESC);
 -- prod_his: production by equipment and time, work order
 CREATE INDEX IF NOT EXISTS idx_prod_his_equip_time ON prod_his (equip_id, time DESC);
 CREATE INDEX IF NOT EXISTS idx_prod_his_work_order ON prod_his (work_order_id);
@@ -385,11 +411,11 @@ CREATE INDEX IF NOT EXISTS idx_kpi_sum_work_order ON kpi_sum (work_order_id);
 -- [5. TimescaleDB Policies]
 -- ----------------------------------------------------------------------------
 -- measurement: compress by equip_id,sensor_id; compress chunks older than 3 days;
--- drop chunks older than 1 month.
+-- drop chunks older than 3 month.
 
 ALTER TABLE measurement SET (
     timescaledb.compress,
     timescaledb.compress_segmentby = 'equip_id,sensor_id'
 );
 SELECT add_compression_policy('measurement', INTERVAL '3 days', if_not_exists => TRUE);
-SELECT add_retention_policy('measurement', INTERVAL '1 month', if_not_exists => TRUE);
+SELECT add_retention_policy('measurement', INTERVAL '3 month', if_not_exists => TRUE);

@@ -11,7 +11,20 @@ DELETE FROM shift_map;
 DELETE FROM maint_his;
 DELETE FROM alarm_his;
 DELETE FROM prod_his;
-DELETE FROM status_his;
+
+DO $$
+BEGIN
+  IF to_regclass('core.equip_status_his') IS NOT NULL THEN
+    DELETE FROM equip_status_his;
+  END IF;
+  IF to_regclass('core.equip_status') IS NOT NULL THEN
+    DELETE FROM equip_status;
+  END IF;
+  IF to_regclass('core.status_his') IS NOT NULL THEN
+    DELETE FROM status_his;
+  END IF;
+END$$;
+
 DELETE FROM measurement;
 DELETE FROM kpi_cfg;
 DELETE FROM sensor_mst;

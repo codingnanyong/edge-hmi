@@ -26,7 +26,11 @@ def get(id: int, db: Session = Depends(get_db)):
 def create(p: AlarmCfgCreate, db: Session = Depends(get_db)):
     row = AlarmCfgModel(
         alarm_code=p.alarm_code,
-        severity=p.severity,
+        lower_limit=p.lower_limit,
+        upper_limit=p.upper_limit,
+        delay_time_sec=p.delay_time_sec,
+        alarm_type=p.alarm_type,
+        is_active=p.is_active,
         description=p.description,
     )
     db.add(row)

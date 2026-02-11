@@ -16,10 +16,10 @@ RUN apk add --no-cache build-base git postgresql16-dev && \
     cp pg_cron.so "$(pg_config --pkglibdir)/" && \
     rm -rf /tmp/pg_cron
 
-# 2. 환경 변수 (동일). POSTGRES_PASSWORD must be set at runtime (e.g. docker-compose); no default.
+# 2. 환경 변수 (동일)
 ENV POSTGRES_DB=${POSTGRES_DB:-edge_hmi} \
     POSTGRES_USER=${POSTGRES_USER:-admin} \
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-1q2w3e4r} \
     TZ=${TZ:-Asia/Seoul}
 
 # 3. PostgreSQL 설정 주입
@@ -28,9 +28,13 @@ RUN echo "shared_preload_libraries = 'timescaledb,pg_cron'" >> /usr/local/share/
     echo "cron.database_name = 'edge_hmi'" >> /usr/local/share/postgresql/postgresql.conf.sample && \
     echo "cron.log_run = 'on'" >> /usr/local/share/postgresql/postgresql.conf.sample
 
-# 4. 초기화 스크립트 복사 (동일)
+# 4. 초기화 스크립트 복사
+# 00: DDL (테이블/인덱스)
+# 01: 함수/트리거 (equip_status 등)
+# 02: KPI 스케줄러/함수
 COPY ./sql/init-db.sql /docker-entrypoint-initdb.d/00-init-db.sql
-COPY ./sql/kpi-scheduler.sql /docker-entrypoint-initdb.d/01-kpi-scheduler.sql
+COPY ./sql/equip-status-fn.sql /docker-entrypoint-initdb.d/01-equip-status-fn.sql
+COPY ./sql/kpi-scheduler.sql /docker-entrypoint-initdb.d/02-kpi-scheduler.sql
 
 USER postgres
 

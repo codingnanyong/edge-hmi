@@ -1,3 +1,10 @@
+/** Sidebar footer: author & repository */
+export const FOOTER = {
+  author: 'codingnanyong (taehyeon.ryu)',
+  email: 'taehyeon.ryu@changshininc.com',
+  giteaUrl: 'http://203.228.101.185:3000/taehyeon.ryu/edge-hmi',
+}
+
 /** Service names (matches hmi_api TABLE_SERVICES) */
 export const TABLE_SERVICES = [
   'line_mst',
@@ -12,7 +19,7 @@ export const TABLE_SERVICES = [
   'parts_mst',
   'defect_code_mst',
   'measurement',
-  'status_his',
+  'equip_status',
   'prod_his',
   'defect_his',
   'alarm_his',
@@ -103,9 +110,9 @@ export const SERVICE_OPERATIONS: Record<string, Array<{ method: 'GET' | 'POST' |
   measurement: [
     { method: 'GET', path: '/measurement', label: 'List' },
   ],
-  status_his: [
-    { method: 'GET', path: '/status_his', label: 'List' },
-    { method: 'GET', path: '/status_his/{id}', label: 'Get' },
+  equip_status: [
+    { method: 'GET', path: '/equip_status', label: 'List' },
+    { method: 'GET', path: '/equip_status/{id}', label: 'Get' },
   ],
   prod_his: [
     { method: 'GET', path: '/prod_his', label: 'List' },
@@ -151,7 +158,7 @@ export const SERVICE_INFO: Record<string, { title: string; description: string }
   parts_mst: { title: 'Parts Master', description: '부품 마스터 정보 관리 API 서비스' },
   defect_code_mst: { title: 'Defect Code', description: '불량 코드 마스터 API 서비스' },
   measurement: { title: 'Measurement', description: '측정 데이터 수집 및 조회 API 서비스' },
-  status_his: { title: 'Status History', description: '설비 상태 이력 조회 API 서비스' },
+  equip_status: { title: 'Equipment Status', description: '설비 상태 구간 이력 조회 API 서비스' },
   prod_his: { title: 'Production History', description: '생산 이력 조회 API 서비스' },
   defect_his: { title: 'Defect History', description: '불량 이력 조회 API 서비스' },
   alarm_his: { title: 'Alarm History', description: '알람 이력 조회 API 서비스' },

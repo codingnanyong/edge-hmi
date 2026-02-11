@@ -75,11 +75,11 @@ export const FEATURE_USAGE = {
           title: 'Equipment Operating Status',
           purpose: 'Real-time: Operating(Green), Stopped(Red), Idle(Orange), Alarm(Blink), Fault(Grey)',
           category: '공통',
-          dataSource: 'status_his, alarm_his',
-          logic: 'status_his 최신 status_code 사용, alarm_his에 진행 중 알람 있으면 Blink 처리',
+          dataSource: 'equip_status, alarm_his',
+          logic: 'equip_status 최신 status_code 사용, alarm_his에 진행 중 알람 있으면 Blink 처리',
           note: 'status_code: Run, Stop, Fault. Merge alarm_his for alarm status.',
           steps: [
-            { api: 'status_his', curl: 'curl "{{BASE}}/status_his?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
+            { api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
           ],
           code: `const latest = statusHis
   .filter(s => s.equip_id === equipId)
@@ -214,9 +214,9 @@ const outOfRange = deviation.some(d => d > threshold);`,
           title: 'Status Transition Trend',
           purpose: 'Operating→Idle→Stopped→Fault timeline',
           category: 'OS/MID',
-          dataSource: 'status_his',
-          logic: '특정 기간 status_his를 시간순 나열하여 간트 차트 형태로 구성',
-          steps: [{ api: 'status_his', curl: 'curl "{{BASE}}/status_his?equip_id=1&start_time_from=...&start_time_to=..."' }],
+          dataSource: 'equip_status',
+          logic: '특정 기간 equip_status를 시간순 나열하여 간트 차트 형태로 구성',
+          steps: [{ api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=..."' }],
           code: `const sorted = statusHis
   .filter(s => s.equip_id === equipId)
   .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));

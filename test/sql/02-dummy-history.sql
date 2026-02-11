@@ -1,9 +1,10 @@
 -- ============================================================================
 -- Dummy data: History & Analytics (run after 01-dummy-master.sql)
 -- - measurement: 200 rows per sensor, in-spec + out-of-spec (~20%)
+-- - equip_status_his: 매초 적재 (1시간 × 3 equip = 10,800 rows), 상태 10분마다 변경 → 트리거로 equip_status 적재
 -- - alarm_his: from measurement out-of-spec
--- - status_his, prod_his, maint_his, shift_map: 100+ rows each
--- - kpi_sum: fn_kpi_sum_calc 기반 집계
+-- - prod_his, maint_his, shift_map: 100+ rows each
+-- - kpi_sum: fn_kpi_sum_calc 기반 집계 (work_order_id from prod_his)
 -- ============================================================================
 
 SET search_path TO core, public;
@@ -59,15 +60,19 @@ SELECT (:base_ts)::timestamptz + (x || ' minutes')::interval * 15, e.id, s.id,
   WHERE (e.equip_code, s.sensor_code) = ('EQ03', 'DEFECT_RATE');
 
 -- ----------------------------------------------------------------------------
--- 2. status_his: 최소 100건 (3 equip × 34)
+-- 2. equip_status_his: 매초 적재 (협의). 1시간 구간, 상태는 10분마다 Run→Stop→Fault 반복
+--    트리거는 상태가 바뀔 때만 equip_status에 UPDATE/INSERT 함
 -- ----------------------------------------------------------------------------
-INSERT INTO status_his (equip_id, status_code, start_time, end_time)
-SELECT e.id,
-       (ARRAY['Run','Stop','Fault'])[1 + (seg % 3)],
-       (:base_ts)::timestamptz + (seg || ' hours')::interval * 2,
-       (:base_ts)::timestamptz + (seg || ' hours')::interval * 2 + interval '1 hour'
+INSERT INTO equip_status_his (equip_id, status_code, capture_time)
+SELECT sub.equip_id, sub.status_code, sub.capture_time
+FROM (
+  SELECT e.id AS equip_id,
+         (ARRAY['Run','Stop','Fault'])[1 + ((sec::int / 600) % 3)] AS status_code,
+         (:base_ts)::timestamptz + (sec || ' seconds')::interval AS capture_time
   FROM equip_mst e
-  CROSS JOIN generate_series(0, 33) seg;
+  CROSS JOIN generate_series(0, 3599) sec
+  ORDER BY e.id, sec
+) sub;
 
 -- ----------------------------------------------------------------------------
 -- 3. prod_his: 100+ rows (3 equip × 34), work_order_id mapped
@@ -111,19 +116,21 @@ SELECT m.time, m.equip_id,
   WHERE m.value < COALESCE(s.lsl_val, -1e9) OR m.value > COALESCE(s.usl_val, 1e9);
 
 -- ----------------------------------------------------------------------------
--- 5. maint_his: 100+ rows (3 equip × 34), Preventive/Corrective, W001~W003 workers
+-- 5. maint_his: 100+ rows (3 equip × 34), part_id/alarm_his_id non-NULL where possible
 -- ----------------------------------------------------------------------------
-INSERT INTO maint_his (equip_id, maint_def_id, worker_id, start_time, end_time, maint_desc, alarm_his_id)
+INSERT INTO maint_his (equip_id, maint_def_id, part_id, worker_id, start_time, end_time, maint_desc, alarm_his_id)
 SELECT e.id,
        (SELECT id FROM maint_cfg ORDER BY id LIMIT 1 OFFSET ((e.id + seg) % 2)),
+       (SELECT id FROM parts_mst WHERE equip_id = e.id LIMIT 1),
        (SELECT id FROM worker_mst ORDER BY id LIMIT 1 OFFSET ((e.id + seg) % 3)),
        (:base_ts)::timestamptz + (seg * 3 + (e.id * 2) % 5) * interval '1 hour' + (seg % 4) * interval '20 minutes',
        (:base_ts)::timestamptz + (seg * 3 + (e.id * 2) % 5) * interval '1 hour' + (seg % 4) * interval '20 minutes'
          + (20 + (seg % 4) * 10) * interval '1 minute',
        (ARRAY['Preventive check', 'Corrective repair', 'Inspection', 'Parts replacement', 'Calibration'])[1 + ((e.id + seg) % 5)],
-       (SELECT id FROM alarm_his ah WHERE ah.equip_id = e.id ORDER BY ah.time ASC, ah.id LIMIT 1 OFFSET seg)
+       (SELECT id FROM (SELECT id, row_number() OVER (ORDER BY time, id) AS rn FROM alarm_his WHERE equip_id = e.id) x WHERE rn = seg + 1 LIMIT 1)
   FROM equip_mst e
-  CROSS JOIN generate_series(0, 33) seg;
+  CROSS JOIN generate_series(0, 33) seg
+  WHERE (SELECT count(*) FROM alarm_his ah WHERE ah.equip_id = e.id) > seg;
 
 -- ----------------------------------------------------------------------------
 -- 6. shift_map: 100+ rows (50 days × 2 shifts)

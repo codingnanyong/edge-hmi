@@ -37,7 +37,7 @@ const FEATURE_USAGE = {
           title: "Equipment Operating Status",
           purpose: "Real-time: Operating(Green), Stopped(Red), Idle(Orange), Alarm(Blink), Fault(Grey)",
           steps: [
-            { api: "status_his", curl: 'curl "{{BASE}}/status_his?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
+            { api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
           ],
           note: "status_code: Run, Stop, Fault. Merge alarm_his for alarm status.",
         },
@@ -81,7 +81,7 @@ const FEATURE_USAGE = {
           { api: "sensor_mst", curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
           { api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=3&time_from=...&time_to=..."' },
         ]},
-        { id: "2.2", title: "Status Transition Trend", purpose: "Operating→Idle→Stopped→Fault", steps: [{ api: "status_his", curl: 'curl "{{BASE}}/status_his?equip_id=1&start_time_from=...&start_time_to=..."' }] },
+        { id: "2.2", title: "Status Transition Trend", purpose: "Operating→Idle→Stopped→Fault", steps: [{ api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=..."' }] },
         { id: "2.3", title: "Multi-equipment Comparison", purpose: "Compare KPI/alarm across equipment", steps: [
           { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
           { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },

@@ -95,7 +95,11 @@ class AlarmCfg(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     alarm_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    severity: Mapped[str | None] = mapped_column(String(20))
+    lower_limit: Mapped[float | None] = mapped_column(Float)
+    upper_limit: Mapped[float | None] = mapped_column(Float)
+    delay_time_sec: Mapped[int | None] = mapped_column(Integer)
+    alarm_type: Mapped[str | None] = mapped_column(String(50))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     description: Mapped[str | None] = mapped_column(Text)
 
 
@@ -159,8 +163,10 @@ class Measurement(Base):
     value: Mapped[float | None] = mapped_column(Float)
 
 
-class StatusHis(Base):
-    __tablename__ = "status_his"
+class EquipStatus(Base):
+    """Interval table: equipment status over time."""
+
+    __tablename__ = "equip_status"
     __table_args__ = {"schema": SCHEMA}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -168,6 +174,18 @@ class StatusHis(Base):
     status_code: Mapped[str | None] = mapped_column(Text)
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True, nullable=False)
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class EquipStatusHis(Base):
+    """Raw polled events backing equip_status intervals."""
+
+    __tablename__ = "equip_status_his"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    equip_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.equip_mst.id", ondelete="RESTRICT"), nullable=False)
+    status_code: Mapped[str | None] = mapped_column(Text)
+    capture_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class ProdHis(Base):
