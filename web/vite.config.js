@@ -16,6 +16,7 @@ export default defineConfig({
             '/line_mst': { target: 'http://localhost:8000', changeOrigin: true },
             '/equip_mst': { target: 'http://localhost:8000', changeOrigin: true },
             '/sensor_mst': { target: 'http://localhost:8000', changeOrigin: true },
+            '/sensor_status': { target: 'http://localhost:8000', changeOrigin: true },
             '/worker_mst': { target: 'http://localhost:8000', changeOrigin: true },
             '/shift_cfg': { target: 'http://localhost:8000', changeOrigin: true },
             '/kpi_cfg': { target: 'http://localhost:8000', changeOrigin: true },

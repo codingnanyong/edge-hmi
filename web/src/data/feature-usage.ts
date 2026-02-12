@@ -381,18 +381,28 @@ const mttr = kpiSum.find(k => k.kpi_code === 'MTTR')?.value;`,
         {
           id: '3.7',
           title: 'Sensor Status',
-          purpose: 'Data validity and communication status',
-          category: 'IP',
-          dataSource: 'sensor_mst, measurement',
-          logic: 'measurement 수집 주기 확인, 미수신 시 "통신 이상" 판단',
+          purpose: 'Sensor power/connection and data collection health; normality of sensor values and conn_status',
+          category: '공통',
+          dataSource: 'sensor_mst, sensor_status, alarm_his',
+          logic: 'sensor_status.last_seen 갱신 주기를 sensor_mst.sampling_rate 기준으로 확인하여 통신/수집 이상 판단',
           steps: [
             { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
-            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1"' },
+            { api: 'sensor_status', curl: 'curl "{{BASE}}/sensor_status?sensor_id=1" or "{{BASE}}/sensor_status/by-sensor/1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
           ],
           code: `sensorMst.map(s => {
-  const last = measurement.filter(m => m.sensor_id === s.id).pop();
-  const gap = last ? (Date.now() - new Date(last.time)) / 1000 : Infinity;
-  return { sensorId: s.id, status: gap > expectedInterval ? 'comm abnormal' : 'ok' };
+  const status = sensorStatus.find(ss => ss.sensor_id === s.id);
+  const expectedIntervalSec = s.sampling_rate ? 1 / s.sampling_rate : 60;
+  const lastSeen = status?.last_seen ? new Date(status.last_seen).getTime() : 0;
+  const gapSec = lastSeen ? (Date.now() - lastSeen) / 1000 : Infinity;
+  const connOk = gapSec <= expectedIntervalSec * 2;
+  return {
+    sensorId: s.id,
+    conn_status: status?.conn_status ?? (connOk ? 'connected' : 'disconnected'),
+    health_score: status?.health_score,
+    error_msg: status?.error_msg,
+    last_seen: status?.last_seen,
+  };
 });`,
         },
         {
