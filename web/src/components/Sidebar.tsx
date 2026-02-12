@@ -13,8 +13,8 @@ export function Sidebar() {
       <Link to={PATHS.home} className={styles.header}>
         <img src="/favicon.svg" alt="" className={styles.headerIcon} aria-hidden />
         <div className={styles.headerText}>
-          <h1 className={styles.title}>Edge HMI</h1>
-          <span className={styles.subtitle}>API Gateway</span>
+          <h1 className={styles.title}>{t('common.appName')}</h1>
+          <span className={styles.subtitle}>{t('common.apiGateway')}</span>
         </div>
       </Link>
 

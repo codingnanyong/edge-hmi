@@ -53,9 +53,11 @@ export function useLocale() {
 const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
   ko: {
     common: {
-      overview: 'Overview',
+      appName: 'Edge HMI',
+      apiGateway: 'API 게이트웨이',
+      overview: '개요',
       swaggerUi: 'Swagger UI',
-      featureUsage: 'Feature Usage',
+      featureUsage: '기능 사용 가이드',
       quickLinks: '빠른 링크',
       tableApis: '테이블 API',
       darkMode: '다크 모드',
@@ -66,8 +68,8 @@ const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
       switchToKorean: '한글로 전환',
     },
     dashboard: {
-      title: 'Edge HMI API Services',
-      subtitle: 'Edge HMI API Gateway — 테이블 API 프록시 서비스',
+      title: 'Edge HMI API 서비스',
+      subtitle: 'Edge HMI API 게이트웨이 — 테이블 API 프록시 서비스',
       servicesCount: '개 서비스 통합',
       swaggerCard: 'API 문서 및 Try it out',
       featureCard: 'Feature API 사용 가이드',
@@ -93,8 +95,8 @@ const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
       loading: '로딩 중…',
     },
     swaggerEmbed: {
-      title: 'API Documentation',
-      loading: 'Loading OpenAPI spec…',
+      title: 'API 문서',
+      loading: 'OpenAPI 스펙 로딩 중…',
     },
     sidebar: {
       author: '제작',
@@ -103,6 +105,8 @@ const TRANSLATIONS: Record<Locale, Record<string, unknown>> = {
   },
   en: {
     common: {
+      appName: 'Edge HMI',
+      apiGateway: 'API Gateway',
       overview: 'Overview',
       swaggerUi: 'Swagger UI',
       featureUsage: 'Feature Usage',
