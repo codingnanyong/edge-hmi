@@ -49,23 +49,23 @@ export const FEATURE_USAGE = {
           purpose: 'Bar chart of defect quantity per worker',
           category: '공통',
           dataSource: 'shift_map, worker_mst, prod_his, defect_his',
-          logic: 'shift_map(work_date, worker_id, equip_id) → prod_his(equip_id, time) → aggregate defect_cnt per worker',
+          logic: 'shift_map(work_date, worker_mst_id, equip_mst_id) → prod_his(equip_mst_id, time) → aggregate defect_cnt per worker',
           formula: 'Defect rate(%) = Σ(defect_cnt) / Σ(total_cnt) × 100 (per worker)',
           steps: [
             { api: 'shift_map', curl: 'curl "{{BASE}}/shift_map?work_date=2025-01-01&limit=500"' },
             { api: 'worker_mst', curl: 'curl "{{BASE}}/worker_mst"' },
-            { api: 'prod_his', curl: 'curl "{{BASE}}/prod_his?equip_id=1&limit=500"' },
+            { api: 'prod_his', curl: 'curl "{{BASE}}/prod_his?equip_mst_id=1&limit=500"' },
             { api: 'defect_his', curl: 'curl "{{BASE}}/defect_his?prod_his_id=1"' },
           ],
           code: `shiftMap
   .filter(s => s.work_date === workDate)
   .map(s => {
-    const prodList = prodHisByEquip[s.equip_id] || [];
+    const prodList = prodHisByEquip[s.equip_mst_id] || [];
     const total = prodList.reduce((sum, p) => sum + p.total_cnt, 0);
     const defect = prodList.reduce((sum, p) => sum + p.defect_cnt, 0);
-    const worker = workerMst.find(w => w.id === s.worker_id);
+    const worker = workerMst.find(w => w.id === s.worker_mst_id);
     return {
-      workerName: worker?.name ?? s.worker_id,
+      workerName: worker?.worker_name ?? s.worker_mst_id,
       defectRate: total ? (defect / total * 100).toFixed(2) : 0,
     };
   });`,
@@ -79,12 +79,12 @@ export const FEATURE_USAGE = {
           logic: 'equip_status 최신 status_code 사용, alarm_his에 진행 중 알람 있으면 Blink 처리',
           note: 'status_code: Run, Stop, Fault. Merge alarm_his for alarm status.',
           steps: [
-            { api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
+            { api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_mst_id=1&start_time_from=...&start_time_to=...&limit=200"' },
           ],
           code: `const latest = statusHis
-  .filter(s => s.equip_id === equipId)
+  .filter(s => s.equip_mst_id === equipId)
   .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))[0];
-const hasOngoingAlarm = alarmHis.some(a => !a.end_time && a.equip_id === equipId);
+const hasOngoingAlarm = alarmHis.some(a => !a.end_time && a.equip_mst_id === equipId);
 const status = latest?.status_code ?? 'Unknown';
 const blink = hasOngoingAlarm ? 'Blink' : null;
 // Map: Run→Green, Stop→Red, Idle→Orange, Fault→Grey, Alarm→Blink`,
@@ -92,17 +92,17 @@ const blink = hasOngoingAlarm ? 'Blink' : null;
         {
           id: '1.5',
           title: 'Work Order',
-          purpose: 'Order number, item name/code, target quantity, due date, SOP',
+          purpose: 'Order number, model name, target quantity, period, SOP',
           category: '공통',
           dataSource: 'work_order',
-          logic: 'work_order 테이블의 target_cnt, sop_link 등 주요 필드 직접 매핑',
+          logic: 'work_order 테이블의 order_no, model_name, target_cnt, start_date/end_date, sop_link를 그대로 카드에 표시',
           steps: [{ api: 'work_order', curl: 'curl "{{BASE}}/work_order"' }],
           code: `workOrders.map(wo => ({
   orderNo: wo.order_no,
-  itemName: wo.item_name,
-  itemCode: wo.item_code,
+  modelName: wo.model_name,
   targetCnt: wo.target_cnt,
-  dueDate: wo.due_date,
+  startDate: wo.start_date,
+  endDate: wo.end_date,
   sopLink: wo.sop_link,
 }));`,
         },
@@ -112,23 +112,27 @@ const blink = hasOngoingAlarm ? 'Blink' : null;
           purpose: 'OEE, good product rate, production progress vs target, cycle time',
           category: '공통',
           dataSource: 'kpi_sum, kpi_cfg',
-          logic: 'kpi_sum 집계 결과와 kpi_cfg 목표값 비교하여 달성률 산출',
-          formula: 'Achievement rate(%) = actual / target × 100',
+          logic: 'kpi_sum의 availability/performance/quality/oee/MTBF/MTTR/UPH 값을 사용하고, kpi_cfg.target_oee와 비교해 달성률 계산',
+          formula: 'OEE Achievement(%) = oee / target_oee × 100',
           steps: [
-            { api: 'kpi_sum', curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01&equip_id=1"' },
+            { api: 'kpi_sum', curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01&equip_mst_id=1"' },
             { api: 'kpi_cfg', curl: 'curl "{{BASE}}/kpi_cfg"' },
           ],
-          code: `kpiSumList.map(kpi => {
-  const cfg = kpiCfg.find(c => c.kpi_code === kpi.kpi_code);
-  const target = cfg?.target_value ?? 0;
-  const actual = kpi.value ?? 0;
-  return {
-    kpiCode: kpi.kpi_code,
-    actual,
-    target,
-    achievementRate: target ? (actual / target * 100).toFixed(1) : '-',
-  };
-});`,
+          code: `const row = kpiSum[0]; // 단일 설비/일자 기준
+const cfg = kpiCfg.find(c => c.equip_mst_id === row.equip_mst_id);
+const targetOee = cfg?.target_oee ?? 0;
+const oee = row.oee ?? 0;
+return {
+  availability: row.availability,
+  performance: row.performance,
+  quality: row.quality,
+  oee,
+  mtbf: row.mtbf,
+  mttr: row.mttr,
+  uph: row.uph,
+  targetOee,
+  oeeAchievement: targetOee ? (oee / targetOee * 100).toFixed(1) : '-',
+};`,
         },
         {
           id: '1.7',
@@ -138,11 +142,11 @@ const blink = hasOngoingAlarm ? 'Blink' : null;
           dataSource: 'measurement, shift_map',
           logic: '선택 조건(Parameter)을 쿼리 필터로 적용하여 고해상도 시계열 시각화',
           steps: [
-            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2&time_from=...&time_to=...&limit=1000"' },
+            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=2&time_from=...&time_to=...&limit=1000"' },
             { api: 'shift_map', curl: 'curl "{{BASE}}/shift_map?work_date=2025-01-01"' },
           ],
-          code: `// time_from, time_to, equip_id, sensor_id 등 선택 파라미터를 쿼리에 적용
-const params = { equip_id, sensor_id, time_from, time_to, limit: 1000 };
+          code: `// time_from, time_to, equip_mst_id, sensor_mst_id 등 선택 파라미터를 쿼리에 적용
+const params = { equip_mst_id, sensor_mst_id, time_from, time_to, limit: 1000 };
 const data = await fetch(\`\${base}/measurement?\${new URLSearchParams(params)}\`);
 const points = data.map(d => ({ time: d.timestamp, value: d.value }));
 // 시계열 차트 라이브러리로 points 렌더링 (줌/팬 지원)`,
@@ -153,12 +157,12 @@ const points = data.map(d => ({ time: d.timestamp, value: d.value }));
           purpose: 'Basic info (specs, CMMS ID, install_date)',
           category: '공통',
           dataSource: 'equip_mst',
-          logic: 'equip_mst 테이블의 equip_code, name, install_date 등 마스터 데이터 로드',
+          logic: 'equip_mst 테이블의 equip_code, equip_name, install_date 등 마스터 데이터 로드',
           steps: [{ api: 'equip_mst', curl: 'curl "{{BASE}}/equip_mst/1"' }],
           code: `const equip = await fetch(\`\${base}/equip_mst/\${equipId}\`);
 return {
   code: equip.equip_code,
-  name: equip.name,
+  name: equip.equip_name,
   installDate: equip.install_date,
   cmmsId: equip.cmms_id,
 };`,
@@ -171,11 +175,11 @@ return {
           dataSource: 'alarm_his, alarm_cfg',
           logic: 'alarm_his와 alarm_cfg 조인하여 위험도(Severity) 및 상세 내용 매핑',
           steps: [
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1&limit=50"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1&limit=50"' },
             { api: 'alarm_cfg', curl: 'curl "{{BASE}}/alarm_cfg"' },
           ],
           code: `alarmHis
-  .filter(a => a.equip_id === equipId)
+  .filter(a => a.equip_mst_id === equipId)
   .map(a => {
     const cfg = alarmCfg.find(c => c.id === a.alarm_cfg_id);
     return {
@@ -199,8 +203,8 @@ return {
           dataSource: 'sensor_mst, measurement',
           logic: 'measurement 전류값을 표준 패턴과 비교하여 임계치 이탈 여부 감시',
           steps: [
-            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
-            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=3&time_from=...&time_to=..."' },
+            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
+            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=3&time_from=...&time_to=..."' },
           ],
           code: `const current = measurement.map(m => m.value);
 const standardPattern = [/* reference curve */];
@@ -216,9 +220,9 @@ const outOfRange = deviation.some(d => d > threshold);`,
           category: 'OS/MID',
           dataSource: 'equip_status',
           logic: '특정 기간 equip_status를 시간순 나열하여 간트 차트 형태로 구성',
-          steps: [{ api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=..."' }],
+          steps: [{ api: 'equip_status', curl: 'curl "{{BASE}}/equip_status?equip_mst_id=1&start_time_from=...&start_time_to=..."' }],
           code: `const sorted = statusHis
-  .filter(s => s.equip_id === equipId)
+  .filter(s => s.equip_mst_id === equipId)
   .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 // Gantt: each row = status block, x = time, color by status_code`,
         },
@@ -228,16 +232,16 @@ const outOfRange = deviation.some(d => d > threshold);`,
           purpose: 'Compare KPI/alarm across equipment',
           category: 'OS/MID',
           dataSource: 'kpi_sum, alarm_his',
-          logic: '여러 equip_id의 kpi_sum 데이터를 병렬 배치하여 편차 분석',
+          logic: '여러 equip_mst_id의 kpi_sum 데이터를 병렬 배치하여 편차 분석',
           steps: [
             { api: 'kpi_sum', curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
           ],
-          code: `const byEquip = Object.groupBy(kpiSum, k => k.equip_id);
+          code: `const byEquip = Object.groupBy(kpiSum, k => k.equip_mst_id);
 equipIds.forEach(eid => {
-  const vals = (byEquip[eid] || []).map(k => k.value);
+  const vals = (byEquip[eid] || []).map(k => k.oee ?? 0);
   const mean = avg(vals), std = stdDev(vals);
-  // Bar chart: equip vs value, highlight outlier if |v - mean| > 2*std
+  // Bar chart: equip vs OEE, highlight outlier if |v - mean| > 2*std
 });`,
         },
         {
@@ -247,8 +251,8 @@ equipIds.forEach(eid => {
           category: '공통',
           dataSource: 'measurement, shift_map',
           logic: '선택 조건(Parameter)을 쿼리 필터로 적용하여 고해상도 시계열 시각화',
-          steps: [{ api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2&time_from=...&time_to=...&limit=1000"' }],
-          code: `// Same as 1.7: filter by equip_id, sensor_id, time_from, time_to
+          steps: [{ api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=2&time_from=...&time_to=...&limit=1000"' }],
+          code: `// Same as 1.7: filter by equip_mst_id, sensor_mst_id, time_from, time_to
 const series = measurement
   .filter(m => applyFilters(m, filters))
   .map(m => ({ x: m.time, y: m.value }));`,
@@ -262,8 +266,8 @@ const series = measurement
           logic: '작업자 교체(shift_map) 또는 부품 교체(parts_mst) 시점 전후 불량률 변화 추적',
           steps: [
             { api: 'shift_map', curl: 'curl "{{BASE}}/shift_map?work_date=2025-01-01"' },
-            { api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_id=1"' },
-            { api: 'prod_his', curl: 'curl "{{BASE}}/prod_his?equip_id=1"' },
+            { api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_mst_id=1"' },
+            { api: 'prod_his', curl: 'curl "{{BASE}}/prod_his?equip_mst_id=1"' },
             { api: 'defect_his', curl: 'curl "{{BASE}}/defect_his?limit=500"' },
           ],
           code: `const changePoints = [...workerChanges, ...partsChanges].sort(byTime);
@@ -281,11 +285,13 @@ changePoints.forEach(({ time, type }) => {
           dataSource: 'sensor_mst, measurement',
           logic: 'is_golden_standard=true 센서 데이터를 배경 레이어로, 실시간 measurement 중첩',
           steps: [
-            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
-            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=1"' },
+            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
+            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=1"' },
           ],
-          code: `const golden = measurement.filter(m => m.is_golden_standard);
-const current = measurement.filter(m => !m.is_golden_standard);
+          code: `const goldenSensors = sensorMst.filter(s => s.is_golden_standard);
+const goldenIds = new Set(goldenSensors.map(s => s.id));
+const golden = measurement.filter(m => goldenIds.has(m.sensor_mst_id));
+const current = measurement.filter(m => !goldenIds.has(m.sensor_mst_id));
 // Chart: layer 1 = golden (dim), layer 2 = current (highlight)`,
         },
         {
@@ -293,12 +299,19 @@ const current = measurement.filter(m => !m.is_golden_standard);
           title: 'Key Process Data Analysis',
           purpose: 'Hot plate temp, mold vacuum, Hopper Dry process visualization',
           category: 'IP',
-          dataSource: 'measurement',
-          logic: '특정 공정 센서 그룹화하여 공정 단계별 정상 범위 이탈 여부 확인',
-          steps: [{ api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2"' }],
-          code: `const byProcessStep = groupBy(measurement, m => m.process_step);
-Object.entries(byProcessStep).forEach(([step, vals]) => {
-  const inRange = vals.filter(v => v >= minRange && v <= maxRange);
+          dataSource: 'sensor_mst, measurement',
+          logic: 'sensor_mst에서 공정별 주요 센서 그룹을 정의하고, measurement 값을 센서 그룹 단위로 집계하여 정상 범위 이탈 여부 확인',
+          steps: [
+            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
+            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=2"' },
+          ],
+          code: `const withMeta = measurement.map(m => ({
+  ...m,
+  sensor: sensorMst.find(s => s.id === m.sensor_mst_id),
+}));
+const bySensorCode = groupBy(withMeta, m => m.sensor?.sensor_name);
+Object.entries(bySensorCode).forEach(([code, vals]) => {
+  const inRange = vals.filter(v => v.value >= minRange && v.value <= maxRange);
   const outOfRange = vals.length - inRange.length;
 });`,
         },
@@ -316,9 +329,9 @@ Object.entries(byProcessStep).forEach(([step, vals]) => {
           dataSource: 'parts_mst',
           logic: 'Usage(%) = current_usage_hours / spec_lifespan_hours × 100',
           formula: 'Usage(%) = current_usage_hours / spec_lifespan_hours × 100',
-          steps: [{ api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_id=1"' }],
+          steps: [{ api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_mst_id=1"' }],
           code: `partsMst.map(p => ({
-  partCode: p.part_code,
+  partName: p.part_name,
   usagePct: (p.current_usage_hours / p.spec_lifespan_hours * 100).toFixed(1),
   needReplace: p.current_usage_hours / p.spec_lifespan_hours > 0.9,
 }));`,
@@ -331,8 +344,8 @@ Object.entries(byProcessStep).forEach(([step, vals]) => {
           dataSource: 'maint_his, alarm_his',
           logic: 'alarm_his.time과 maint_his.end_time 차이로 조치 소요 시간 산출',
           steps: [
-            { api: 'maint_his', curl: 'curl "{{BASE}}/maint_his?equip_id=1"' },
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+            { api: 'maint_his', curl: 'curl "{{BASE}}/maint_his?equip_mst_id=1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
           ],
           code: `alarmHis.map(a => {
   const maint = maintHis.find(m => m.alarm_his_id === a.id);
@@ -351,15 +364,19 @@ Object.entries(byProcessStep).forEach(([step, vals]) => {
           logic: 'alarm_his를 사유별 그룹화하여 빈도 계산, kpi_sum의 MTBF/MTTR 표시',
           steps: [
             { api: 'kpi_sum', curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
             { api: 'alarm_cfg', curl: 'curl "{{BASE}}/alarm_cfg"' },
           ],
-          code: `const byReason = Object.groupBy(alarmHis, a => a.reason_code);
+          code: `const byReason = Object.groupBy(alarmHis, a => {
+  const cfg = alarmCfg.find(c => c.id === a.alarm_cfg_id);
+  return cfg?.alarm_code ?? 'UNKNOWN';
+});
 const pareto = Object.entries(byReason)
   .map(([r, list]) => ({ reason: r, count: list.length }))
   .sort((a, b) => b.count - a.count);
-const mtbf = kpiSum.find(k => k.kpi_code === 'MTBF')?.value;
-const mttr = kpiSum.find(k => k.kpi_code === 'MTTR')?.value;`,
+const row = kpiSum[0];
+const mtbf = row?.mtbf;
+const mttr = row?.mttr;`,
         },
         {
           id: '3.6',
@@ -369,7 +386,7 @@ const mttr = kpiSum.find(k => k.kpi_code === 'MTTR')?.value;`,
           dataSource: 'parts_mst, alarm_cfg',
           logic: '부품 사용률 90% 초과 또는 정비 예정일 도래 시 알림 트리거',
           steps: [
-            { api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_id=1"' },
+            { api: 'parts_mst', curl: 'curl "{{BASE}}/parts_mst?equip_mst_id=1"' },
             { api: 'alarm_cfg', curl: 'curl "{{BASE}}/alarm_cfg"' },
           ],
           code: `partsMst.filter(p => {
@@ -386,12 +403,12 @@ const mttr = kpiSum.find(k => k.kpi_code === 'MTTR')?.value;`,
           dataSource: 'sensor_mst, sensor_status, alarm_his',
           logic: 'sensor_status.last_seen 갱신 주기를 sensor_mst.sampling_rate 기준으로 확인하여 통신/수집 이상 판단',
           steps: [
-            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
-            { api: 'sensor_status', curl: 'curl "{{BASE}}/sensor_status?sensor_id=1" or "{{BASE}}/sensor_status/by-sensor/1"' },
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
+            { api: 'sensor_status', curl: 'curl "{{BASE}}/sensor_status?sensor_mst_id=1" or "{{BASE}}/sensor_status/by-sensor/1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
           ],
           code: `sensorMst.map(s => {
-  const status = sensorStatus.find(ss => ss.sensor_id === s.id);
+  const status = sensorStatus.find(ss => ss.sensor_mst_id === s.id);
   const expectedIntervalSec = s.sampling_rate ? 1 / s.sampling_rate : 60;
   const lastSeen = status?.last_seen ? new Date(status.last_seen).getTime() : 0;
   const gapSec = lastSeen ? (Date.now() - lastSeen) / 1000 : Infinity;
@@ -413,13 +430,13 @@ const mttr = kpiSum.find(k => k.kpi_code === 'MTTR')?.value;`,
           dataSource: 'alarm_his, sensor_mst',
           logic: '히팅선 전류 센서 알람과 Station 위치 정보 결합하여 레이아웃 표기',
           steps: [
-            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
-            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
+            { api: 'alarm_his', curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
+            { api: 'sensor_mst', curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
           ],
           code: `const heatingSensors = sensorMst.filter(s => s.sensor_type === 'heating_wire');
 const byStation = Object.groupBy(
-  alarmHis.filter(a => heatingSensors.some(h => h.id === a.sensor_id)),
-  a => sensorMst.find(s => s.id === a.sensor_id)?.station_id
+  alarmHis.filter(a => heatingSensors.some(h => h.id === a.sensor_mst_id)),
+  a => sensorMst.find(s => s.id === a.sensor_mst_id)?.station_id
 );
 // Layout: station position + count per station`,
         },
@@ -458,9 +475,9 @@ const hourly = prodHis.reduce((acc, p) => {
           logic: '불량 유형별 발생 횟수 내림차순 정렬, 누적 백분율과 함께 그래프화',
           formula: 'Cumulative % = Σ(count up to i) / Σ(total) × 100',
           steps: [{ api: 'defect_his, defect_code_mst', curl: 'curl "{{BASE}}/defect_his?limit=500"' }],
-          code: `const byType = Object.groupBy(defectHis, d => d.defect_code_id);
+          code: `const byType = Object.groupBy(defectHis, d => d.defect_code_mst_id);
 const pareto = Object.entries(byType)
-  .map(([code, list]) => ({ code, count: list.length, name: defectCodeMst[code]?.name }))
+  .map(([code, list]) => ({ code, count: list.length, name: defectCodeMst[code]?.reason_name }))
   .sort((a, b) => b.count - a.count);
 const total = pareto.reduce((s, p) => s + p.count, 0);
 pareto.forEach((p, i) => {
@@ -476,12 +493,12 @@ pareto.forEach((p, i) => {
           logic: '제품 생산 시점(time) 기준으로 measurement 범위 매칭하여 조회',
           steps: [
             { api: 'prod_his', curl: 'curl "{{BASE}}/prod_his?work_order_id=1"' },
-            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1"' },
+            { api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1"' },
           ],
           code: `const prod = prodHis.find(p => p.id === prodHisId);
 const window = 60; // seconds
 const range = measurement.filter(m =>
-  m.equip_id === prod.equip_id &&
+  m.equip_mst_id === prod.equip_mst_id &&
   Math.abs(new Date(m.time) - new Date(prod.time)) / 1000 <= window
 );`,
         },
@@ -493,7 +510,7 @@ const range = measurement.filter(m =>
           dataSource: 'measurement',
           logic: '품질 센서 데이터 분류하여 관리 한계선(LCL/UCL) 이탈 여부 판단',
           formula: 'UCL = μ + 3σ, LCL = μ - 3σ',
-          steps: [{ api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2"' }],
+          steps: [{ api: 'measurement', curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=2"' }],
           code: `const vals = measurement.map(m => m.value);
 const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
 const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length);

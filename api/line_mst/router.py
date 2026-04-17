@@ -33,7 +33,11 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=LineMstRead, status_code=201)
 def create(p: LineMstCreate, db: Session = Depends(get_db)):
     row = LineMstModel(
-        process_type=p.process_type, line_code=p.line_code, line_name=p.line_name
+        plant_id=p.plant_id,
+        factory_id=p.factory_id,
+        process_type=p.process_type,
+        line_code=p.line_code,
+        line_name=p.line_name,
     )
     db.add(row)
     db.commit()

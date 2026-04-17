@@ -67,9 +67,28 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Swagger UI: 제목·설명 가독성 */
+.swagger-ui .information-container .info .title {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important;
+  letter-spacing: -0.02em;
+}
+.swagger-ui .information-container .info .title small {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+}
+.swagger-ui .information-container .info p,
+.swagger-ui .information-container .info .info__description {
+  color: var(--text-secondary) !important;
+}
+
 /* Swagger UI 다크 모드 가독성 */
 [data-theme='dark'] .swagger-ui {
   color: var(--text-primary) !important;
+}
+[data-theme='dark'] .swagger-ui .information-container .info .title {
+  color: #e6edf3 !important;
 }
 [data-theme='dark'] .swagger-ui .opblock,
 [data-theme='dark'] .swagger-ui .opblock-summary,

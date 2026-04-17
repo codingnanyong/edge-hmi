@@ -17,14 +17,14 @@ def list_(
     skip: int = 0,
     limit: int = Query(100, le=500),
     calc_date: date | None = None,
-    equip_id: int | None = None,
+    equip_mst_id: int | None = None,
     work_order_id: int | None = None,
 ):
     q = db.query(KpiSumModel)
     if calc_date is not None:
         q = q.filter(KpiSumModel.calc_date == calc_date)
-    if equip_id is not None:
-        q = q.filter(KpiSumModel.equip_id == equip_id)
+    if equip_mst_id is not None:
+        q = q.filter(KpiSumModel.equip_mst_id == equip_mst_id)
     if work_order_id is not None:
         q = q.filter(KpiSumModel.work_order_id == work_order_id)
     return q.order_by(KpiSumModel.id).offset(skip).limit(limit).all()

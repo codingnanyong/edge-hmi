@@ -30,14 +30,14 @@ BEGIN
     SELECT id, status_code, start_time
     INTO v_last_id, v_last_status, v_last_start
     FROM equip_status
-    WHERE equip_id = NEW.equip_id
+    WHERE equip_mst_id = NEW.equip_mst_id
     ORDER BY start_time DESC
     LIMIT 1;
 
     -- First status for this equipment
     IF v_last_id IS NULL THEN
-        INSERT INTO equip_status (equip_id, status_code, start_time)
-        VALUES (NEW.equip_id, NEW.status_code, NEW.capture_time);
+        INSERT INTO equip_status (equip_mst_id, status_code, start_time)
+        VALUES (NEW.equip_mst_id, NEW.status_code, NEW.capture_time);
         RETURN NEW;
     END IF;
 
@@ -52,8 +52,8 @@ BEGIN
     WHERE id = v_last_id;
 
     -- Start new interval
-    INSERT INTO equip_status (equip_id, status_code, start_time)
-    VALUES (NEW.equip_id, NEW.status_code, NEW.capture_time);
+    INSERT INTO equip_status (equip_mst_id, status_code, start_time)
+    VALUES (NEW.equip_mst_id, NEW.status_code, NEW.capture_time);
 
     RETURN NEW;
 END;

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class WorkOrderBase(BaseModel):
     order_no: str
+    shift_map_id: int
     model_name: str | None = None
     target_cnt: int | None = None
     sop_link: str | None = None
@@ -18,6 +19,7 @@ class WorkOrderCreate(WorkOrderBase):
 
 class WorkOrderUpdate(BaseModel):
     order_no: str | None = None
+    shift_map_id: int | None = None
     model_name: str | None = None
     target_cnt: int | None = None
     sop_link: str | None = None

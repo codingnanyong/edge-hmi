@@ -14,11 +14,11 @@ def list_(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = Query(100, le=500),
-    equip_id: int | None = None,
+    equip_mst_id: int | None = None,
 ):
     q = db.query(AlarmHisModel)
-    if equip_id is not None:
-        q = q.filter(AlarmHisModel.equip_id == equip_id)
+    if equip_mst_id is not None:
+        q = q.filter(AlarmHisModel.equip_mst_id == equip_mst_id)
     return q.order_by(AlarmHisModel.id).offset(skip).limit(limit).all()
 
 

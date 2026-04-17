@@ -95,7 +95,7 @@ async def openapi_aggregated():
         "info": {
             "title": "Edge HMI API Documentation",
             "version": APP_VERSION,
-            "description": f"프록시 게이트웨이. Total {len(tags)} tables integrated.",
+            "description": f"Proxy gateway. {len(tags)} table APIs integrated.",
         },
         "paths": paths,
         "tags": tags,

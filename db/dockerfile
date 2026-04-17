@@ -1,3 +1,4 @@
+# For an image that also ships db/migrations + migrate.sh, see dockerfile_v1.0.0 (or newer dockerfile_v*).
 FROM timescale/timescaledb:latest-pg16
 
 USER root
@@ -29,12 +30,18 @@ RUN echo "shared_preload_libraries = 'timescaledb,pg_cron'" >> /usr/local/share/
     echo "cron.log_run = 'on'" >> /usr/local/share/postgresql/postgresql.conf.sample
 
 # 4. 초기화 스크립트 복사
-# 00: DDL (테이블/인덱스)
-# 01: 함수/트리거 (equip_status 등)
-# 02: KPI 스케줄러/함수
+# 00: DDL | 01: equip_status 트리거 | 02: KPI 함수+pg_cron | 03: shift_cfg 함수+pg_cron
 COPY ./sql/init-db.sql /docker-entrypoint-initdb.d/00-init-db.sql
 COPY ./sql/equip-status-fn.sql /docker-entrypoint-initdb.d/01-equip-status-fn.sql
 COPY ./sql/kpi-scheduler.sql /docker-entrypoint-initdb.d/02-kpi-scheduler.sql
+COPY ./sql/shift-cfg-daily.sql /docker-entrypoint-initdb.d/03-shift-cfg-daily.sql
+COPY ./sql/shift-cfg-daily.sql /opt/edge-hmi/sql/shift-cfg-daily.sql
+
+# migrate.sh + migrations (compose에서 백업 볼륨 마운트 시 영구 보관)
+COPY ./migrations /opt/edge-hmi/db/migrations
+COPY ./scripts/migrate.sh /opt/edge-hmi/db/scripts/migrate.sh
+RUN chmod +x /opt/edge-hmi/db/scripts/migrate.sh && mkdir -p /opt/edge-hmi/db/backups && \
+    chown -R postgres:postgres /opt/edge-hmi/db
 
 USER postgres
 

@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class PartsMstBase(BaseModel):
-    equip_id: int
+    equip_mst_id: int
     part_name: str
     spec_lifespan_hours: float | None = None
     current_usage_hours: float = 0
@@ -16,7 +16,7 @@ class PartsMstCreate(PartsMstBase):
 
 
 class PartsMstUpdate(BaseModel):
-    equip_id: int | None = None
+    equip_mst_id: int | None = None
     part_name: str | None = None
     spec_lifespan_hours: float | None = None
     current_usage_hours: float | None = None

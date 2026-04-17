@@ -25,10 +25,10 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=EquipMstRead, status_code=201)
 def create(p: EquipMstCreate, db: Session = Depends(get_db)):
     row = EquipMstModel(
-        line_id=p.line_id,
+        line_mst_id=p.line_mst_id,
         equip_code=p.equip_code,
-        name=p.name,
-        type=p.type,
+        equip_name=p.equip_name,
+        equip_type=p.equip_type,
         install_date=p.install_date,
     )
     db.add(row)
@@ -42,14 +42,14 @@ def update(id: int, p: EquipMstUpdate, db: Session = Depends(get_db)):
     row = db.get(EquipMstModel, id)
     if not row:
         raise HTTPException(404, "equip_mst not found")
-    if p.line_id is not None:
-        row.line_id = p.line_id
+    if p.line_mst_id is not None:
+        row.line_mst_id = p.line_mst_id
     if p.equip_code is not None:
         row.equip_code = p.equip_code
-    if p.name is not None:
-        row.name = p.name
-    if p.type is not None:
-        row.type = p.type
+    if p.equip_name is not None:
+        row.equip_name = p.equip_name
+    if p.equip_type is not None:
+        row.equip_type = p.equip_type
     if p.install_date is not None:
         row.install_date = p.install_date
     db.commit()

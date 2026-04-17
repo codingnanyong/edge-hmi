@@ -25,14 +25,17 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=SensorMstRead, status_code=201)
 def create(p: SensorMstCreate, db: Session = Depends(get_db)):
     row = SensorMstModel(
-        equip_id=p.equip_id,
-        sensor_code=p.sensor_code,
+        equip_mst_id=p.equip_mst_id,
+        sensor_name=p.sensor_name,
         unit=p.unit,
+        sampling_rate=p.sampling_rate,
+        is_active=p.is_active,
         lsl_val=p.lsl_val,
         usl_val=p.usl_val,
         lcl_val=p.lcl_val,
         ucl_val=p.ucl_val,
         is_golden_standard=p.is_golden_standard,
+        mac_address=p.mac_address,
     )
     db.add(row)
     db.commit()

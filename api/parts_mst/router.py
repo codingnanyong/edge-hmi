@@ -14,11 +14,11 @@ def list_(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = Query(100, le=500),
-    equip_id: int | None = None,
+    equip_mst_id: int | None = None,
 ):
     q = db.query(PartsMstModel)
-    if equip_id is not None:
-        q = q.filter(PartsMstModel.equip_id == equip_id)
+    if equip_mst_id is not None:
+        q = q.filter(PartsMstModel.equip_mst_id == equip_mst_id)
     return q.order_by(PartsMstModel.id).offset(skip).limit(limit).all()
 
 
@@ -33,7 +33,7 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=PartsMstRead, status_code=201)
 def create(p: PartsMstCreate, db: Session = Depends(get_db)):
     row = PartsMstModel(
-        equip_id=p.equip_id,
+        equip_mst_id=p.equip_mst_id,
         part_name=p.part_name,
         spec_lifespan_hours=p.spec_lifespan_hours,
         current_usage_hours=p.current_usage_hours,

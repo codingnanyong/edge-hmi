@@ -30,6 +30,7 @@ def get(id: int, db: Session = Depends(get_db)):
 def create(p: WorkOrderCreate, db: Session = Depends(get_db)):
     row = WorkOrderModel(
         order_no=p.order_no,
+        shift_map_id=p.shift_map_id,
         model_name=p.model_name,
         target_cnt=p.target_cnt,
         sop_link=p.sop_link,

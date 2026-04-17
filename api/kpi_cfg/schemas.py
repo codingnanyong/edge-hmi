@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class KpiCfgBase(BaseModel):
-    equip_id: int
+    equip_mst_id: int
     std_cycle_time: float | None = None
     target_oee: float | None = None
 
@@ -12,7 +12,7 @@ class KpiCfgCreate(KpiCfgBase):
 
 
 class KpiCfgUpdate(BaseModel):
-    equip_id: int | None = None
+    equip_mst_id: int | None = None
     std_cycle_time: float | None = None
     target_oee: float | None = None
 

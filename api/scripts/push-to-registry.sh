@@ -13,13 +13,13 @@ set -e
 #   ./scripts/push-to-registry.sh [registry-url] [version] line_mst sensor_mst hmi-api  # push several
 #
 # Examples:
-#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0
-#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0 hmi-api
-#   ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0 line_mst equip_mst
+#   ./scripts/push-to-registry.sh ip address:port v1.0
+#   ./scripts/push-to-registry.sh ip address:port v1.0 hmi-api
+#   ./scripts/push-to-registry.sh ip address:port v1.0 line_mst equip_mst
 # ============================================================================
 
-REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [version] [service ...]}"
-VERSION="${2:-latest}"
+REGISTRY_URL="${1:-ip address:port}"
+VERSION="${2:-v1.0}"
 if [ $# -ge 2 ]; then
   shift 2
   REQUESTED=("$@")
@@ -41,6 +41,7 @@ declare -A API_MAP=(
   [maint_cfg]="maint_cfg/Dockerfile:btx/edge-hmi-api-maint-cfg"
   [measurement]="measurement/Dockerfile:btx/edge-hmi-api-measurement"
   [equip_status]="equip_status/Dockerfile:btx/edge-hmi-api-equip-status"
+  [sensor_status]="sensor_status/Dockerfile:btx/edge-hmi-api-sensor-status"
   [prod_his]="prod_his/Dockerfile:btx/edge-hmi-api-prod-his"
   [alarm_his]="alarm_his/Dockerfile:btx/edge-hmi-api-alarm-his"
   [maint_his]="maint_his/Dockerfile:btx/edge-hmi-api-maint-his"
@@ -53,7 +54,7 @@ declare -A API_MAP=(
   [parts_mst]="parts_mst/Dockerfile:btx/edge-hmi-api-parts-mst"
 )
 
-ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg measurement status_his prod_his alarm_his maint_his shift_map hmi-api)
+ALL_KEYS=(line_mst equip_mst sensor_mst kpi_sum worker_mst shift_cfg kpi_cfg alarm_cfg maint_cfg measurement equip_status sensor_status prod_his alarm_his maint_his shift_map work_order parts_mst defect_code_mst defect_his hmi-api)
 
 resolve_targets() {
   if [ ${#REQUESTED[@]} -eq 0 ]; then

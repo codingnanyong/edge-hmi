@@ -24,7 +24,12 @@ def get(id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=WorkerMstRead, status_code=201)
 def create(p: WorkerMstCreate, db: Session = Depends(get_db)):
-    row = WorkerMstModel(worker_code=p.worker_code, name=p.name, dept_name=p.dept_name)
+    row = WorkerMstModel(
+        worker_code=p.worker_code,
+        worker_name=p.worker_name,
+        dept_name=p.dept_name,
+        rf_id=p.rf_id,
+    )
     db.add(row)
     db.commit()
     db.refresh(row)

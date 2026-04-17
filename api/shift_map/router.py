@@ -17,16 +17,16 @@ def list_(
     skip: int = 0,
     limit: int = Query(100, le=500),
     work_date: date | None = None,
-    line_id: int | None = None,
-    worker_id: int | None = None,
+    line_mst_id: int | None = None,
+    worker_mst_id: int | None = None,
 ):
     q = db.query(ShiftMapModel)
     if work_date is not None:
         q = q.filter(ShiftMapModel.work_date == work_date)
-    if line_id is not None:
-        q = q.filter(ShiftMapModel.line_id == line_id)
-    if worker_id is not None:
-        q = q.filter(ShiftMapModel.worker_id == worker_id)
+    if line_mst_id is not None:
+        q = q.filter(ShiftMapModel.line_mst_id == line_mst_id)
+    if worker_mst_id is not None:
+        q = q.filter(ShiftMapModel.worker_mst_id == worker_mst_id)
     return q.order_by(ShiftMapModel.id).offset(skip).limit(limit).all()
 
 
@@ -42,10 +42,10 @@ def get(id: int, db: Session = Depends(get_db)):
 def create(p: ShiftMapCreate, db: Session = Depends(get_db)):
     row = ShiftMapModel(
         work_date=p.work_date,
-        shift_def_id=p.shift_def_id,
-        worker_id=p.worker_id,
-        line_id=p.line_id,
-        equip_id=p.equip_id,
+        shift_cfg_id=p.shift_cfg_id,
+        worker_mst_id=p.worker_mst_id,
+        line_mst_id=p.line_mst_id,
+        equip_mst_id=p.equip_mst_id,
     )
     db.add(row)
     db.commit()

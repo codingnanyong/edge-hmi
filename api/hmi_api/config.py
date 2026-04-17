@@ -17,6 +17,7 @@ TABLE_SERVICES = [
     "defect_code_mst",
     "measurement",
     "equip_status",
+    "sensor_status",
     "prod_his",
     "defect_his",
     "alarm_his",

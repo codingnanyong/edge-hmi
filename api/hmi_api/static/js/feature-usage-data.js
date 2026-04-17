@@ -27,17 +27,17 @@ const FEATURE_USAGE = {
           steps: [
             { api: "shift_map", curl: 'curl "{{BASE}}/shift_map?work_date=2025-01-01&limit=500"' },
             { api: "worker_mst", curl: 'curl "{{BASE}}/worker_mst"' },
-            { api: "prod_his", curl: 'curl "{{BASE}}/prod_his?equip_id=1&limit=500"' },
+            { api: "prod_his", curl: 'curl "{{BASE}}/prod_his?equip_mst_id=1&limit=500"' },
             { api: "defect_his", curl: 'curl "{{BASE}}/defect_his?prod_his_id=1"' },
           ],
-          logic: "shift_map(work_date,worker_id,equip_id) → prod_his(equip_id,time) → aggregate defect_cnt per worker",
+          logic: "shift_map(work_date,worker_mst_id,equip_mst_id) → prod_his(equip_mst_id,time) → aggregate defect_cnt per worker",
         },
         {
           id: "1.4",
           title: "Equipment Operating Status",
           purpose: "Real-time: Operating(Green), Stopped(Red), Idle(Orange), Alarm(Blink), Fault(Grey)",
           steps: [
-            { api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=...&limit=200"' },
+            { api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_mst_id=1&start_time_from=...&start_time_to=...&limit=200"' },
           ],
           note: "status_code: Run, Stop, Fault. Merge alarm_his for alarm status.",
         },
@@ -52,7 +52,7 @@ const FEATURE_USAGE = {
           title: "Key KPIs",
           purpose: "OEE, good product rate, production progress vs target, cycle time",
           steps: [
-            { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01&equip_id=1"' },
+            { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01&equip_mst_id=1"' },
             { api: "kpi_cfg", curl: 'curl "{{BASE}}/kpi_cfg"' },
           ],
         },
@@ -67,7 +67,7 @@ const FEATURE_USAGE = {
           title: "Equipment Alarm Status",
           purpose: "Alarms per equipment (status, sensor, process conditions)",
           steps: [
-            { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1&limit=50"' },
+            { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1&limit=50"' },
             { api: "alarm_cfg", curl: 'curl "{{BASE}}/alarm_cfg"' },
           ],
         },
@@ -78,29 +78,29 @@ const FEATURE_USAGE = {
       title: "Process & Trend",
       features: [
         { id: "2.1", title: "Standard Work Compliance", purpose: "Motor current load patterns", steps: [
-          { api: "sensor_mst", curl: 'curl "{{BASE}}/sensor_mst?equip_id=1"' },
-          { api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=3&time_from=...&time_to=..."' },
+          { api: "sensor_mst", curl: 'curl "{{BASE}}/sensor_mst?equip_mst_id=1"' },
+          { api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=3&time_from=...&time_to=..."' },
         ]},
-        { id: "2.2", title: "Status Transition Trend", purpose: "Operating→Idle→Stopped→Fault", steps: [{ api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_id=1&start_time_from=...&start_time_to=..."' }] },
+        { id: "2.2", title: "Status Transition Trend", purpose: "Operating→Idle→Stopped→Fault", steps: [{ api: "equip_status", curl: 'curl "{{BASE}}/equip_status?equip_mst_id=1&start_time_from=...&start_time_to=..."' }] },
         { id: "2.3", title: "Multi-equipment Comparison", purpose: "Compare KPI/alarm across equipment", steps: [
           { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
-          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
         ]},
-        { id: "2.4", title: "Multi-time-series Trend", purpose: "Period/worker/part/sensor charts", steps: [{ api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_id=1&sensor_id=2&time_from=...&time_to=...&limit=1000"' }] },
+        { id: "2.4", title: "Multi-time-series Trend", purpose: "Period/worker/part/sensor charts", steps: [{ api: "measurement", curl: 'curl "{{BASE}}/measurement?equip_mst_id=1&sensor_mst_id=2&time_from=...&time_to=...&limit=1000"' }] },
       ],
     },
     {
       id: "03",
       title: "Maintenance & Health",
       features: [
-        { id: "3.3", title: "Parts Life Cycle", purpose: "Usage %, replacement notice", steps: [{ api: "parts_mst", curl: 'curl "{{BASE}}/parts_mst?equip_id=1"' }], formula: "Usage(%) = current_usage_hours / spec_lifespan_hours * 100" },
+        { id: "3.3", title: "Parts Life Cycle", purpose: "Usage %, replacement notice", steps: [{ api: "parts_mst", curl: 'curl "{{BASE}}/parts_mst?equip_mst_id=1"' }], formula: "Usage(%) = current_usage_hours / spec_lifespan_hours * 100" },
         { id: "3.4", title: "Fault/Repair Timeline", purpose: "Fault occurrence → action completion", steps: [
-          { api: "maint_his", curl: 'curl "{{BASE}}/maint_his?equip_id=1"' },
-          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+          { api: "maint_his", curl: 'curl "{{BASE}}/maint_his?equip_mst_id=1"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
         ]},
         { id: "3.5", title: "Downtime Analysis", purpose: "Pareto, MTBF, MTTR", steps: [
           { api: "kpi_sum", curl: 'curl "{{BASE}}/kpi_sum?calc_date=2025-01-01"' },
-          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_id=1"' },
+          { api: "alarm_his", curl: 'curl "{{BASE}}/alarm_his?equip_mst_id=1"' },
           { api: "alarm_cfg", curl: 'curl "{{BASE}}/alarm_cfg"' },
         ]},
       ],

@@ -2,16 +2,17 @@
 -- KPI Summary Scheduler
 -- ============================================================================
 -- Run after init-db.sql. Populates kpi_sum from equip_status, prod_his, alarm_his,
--- maint_his, shift_map, kpi_cfg per (calc_date, shift_def_id, line_id, equip_id).
+-- maint_his, shift_map, kpi_cfg per (calc_date, shift_cfg_id, line_id, equip_id).
 --
 -- RECOMMENDED: Use host cron (no pg_cron needed)
 --   Crontab: use POSTGRES_USER, POSTGRES_DB from .env (or source .env in cron).
 --     0 1 * * * docker exec hmi-db-postgres psql -U admin -d edge_hmi -c "SELECT fn_kpi_sum_calc(CURRENT_DATE - 1);"
 --
--- OPTIONAL: pg_cron (if available in image)
+-- OPTIONAL: pg_cron (if available in image) — 초기화 시 2개 job 등록:
+--   1) 0 1 * * *  → SELECT core.fn_kpi_sum_calc(CURRENT_DATE - 1);
+--   2) 0 23 * * * → SELECT core.fn_shift_cfg_daily();
 --   Requires: shared_preload_libraries = 'pg_cron' in postgresql.conf
---   Standard TimescaleDB images do NOT include pg_cron by default.
---   See README.md for Dockerfile option to build with pg_cron.
+--   fn_shift_cfg_daily는 sql/shift-cfg-daily-fn.sql(02)에서 정의.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -44,12 +45,12 @@ BEGIN
   DELETE FROM kpi_sum WHERE calc_date = p_calc_date;
 
   FOR r IN
-    SELECT DISTINCT sm.shift_def_id, sm.line_id, sm.equip_id
+    SELECT DISTINCT sm.shift_cfg_id, sm.line_id, sm.equip_id
     FROM shift_map sm
     WHERE sm.work_date = p_calc_date AND sm.equip_id IS NOT NULL
   LOOP
     SELECT sc.start_time, sc.end_time INTO v_start, v_end
-    FROM shift_cfg sc WHERE sc.id = r.shift_def_id;
+    FROM shift_cfg sc WHERE sc.id = r.shift_cfg_id;
     IF NOT FOUND THEN
       CONTINUE;
     END IF;
@@ -127,10 +128,10 @@ BEGIN
 
     -- UPH (Units Per Hour): good_cnt per planned shift hour
     INSERT INTO kpi_sum (
-      calc_date, shift_def_id, line_id, equip_id, work_order_id,
+      calc_date, shift_cfg_id, line_id, equip_id, work_order_id,
       availability, performance, quality, oee, mttr, mtbf, uph
     ) VALUES (
-      p_calc_date, r.shift_def_id, r.line_id, r.equip_id, v_work_order_id,
+      p_calc_date, r.shift_cfg_id, r.line_id, r.equip_id, v_work_order_id,
       avail, perf, qual, avail * perf * qual,
       mttr_sec, mtbf_hr,
       CASE WHEN planned_sec > 0 THEN good_cnt::FLOAT * 3600.0 / planned_sec ELSE NULL END

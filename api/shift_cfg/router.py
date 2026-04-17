@@ -25,6 +25,7 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=ShiftCfgRead, status_code=201)
 def create(p: ShiftCfgCreate, db: Session = Depends(get_db)):
     row = ShiftCfgModel(
+        work_date=p.work_date,
         shift_name=p.shift_name,
         start_time=p.start_time,
         end_time=p.end_time,

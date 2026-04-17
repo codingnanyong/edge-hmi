@@ -6,9 +6,9 @@ from pydantic import BaseModel, ConfigDict
 class KpiSumRead(BaseModel):
     id: int
     calc_date: date
-    shift_def_id: int | None
-    line_id: int | None
-    equip_id: int | None
+    shift_cfg_id: int | None
+    line_mst_id: int | None
+    equip_mst_id: int | None
     work_order_id: int | None
     availability: float | None
     performance: float | None

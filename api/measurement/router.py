@@ -16,16 +16,16 @@ def list_(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = Query(100, le=1000),
-    equip_id: int | None = None,
-    sensor_id: int | None = None,
+    equip_mst_id: int | None = None,
+    sensor_mst_id: int | None = None,
     time_from: datetime | None = None,
     time_to: datetime | None = None,
 ):
     q = db.query(MeasurementModel)
-    if equip_id is not None:
-        q = q.filter(MeasurementModel.equip_id == equip_id)
-    if sensor_id is not None:
-        q = q.filter(MeasurementModel.sensor_id == sensor_id)
+    if equip_mst_id is not None:
+        q = q.filter(MeasurementModel.equip_mst_id == equip_mst_id)
+    if sensor_mst_id is not None:
+        q = q.filter(MeasurementModel.sensor_mst_id == sensor_mst_id)
     if time_from is not None:
         q = q.filter(MeasurementModel.time >= time_from)
     if time_to is not None:

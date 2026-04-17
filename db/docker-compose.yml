@@ -19,9 +19,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # 데이터 영구 저장을 위한 볼륨 (init-db.sql은 이미지에 포함)
+      # PostgreSQL 클러스터 데이터 (기본 영구 저장)
       - edge_hmi_data:/var/lib/postgresql/data
+      # migrate.sh 가 만드는 pg_dump(-Fc) 백업 — DB 데이터와 별개이므로 별도 볼륨 권장
+      - edge_hmi_backups:/opt/edge-hmi/db/backups
     restart: unless-stopped
+    # 마이그레이션 예: migrate.sh 가 POSTGRES_* → PG* 로 매핑. 백업은 edge_hmi_backups 볼륨
+    #   docker compose exec edge-hmi-db /opt/edge-hmi/db/scripts/migrate.sh
     healthcheck:
       # pg_isready를 사용하여 DB가 완전히 준비되었는지 체크
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -31,3 +35,4 @@ services:
 
 volumes:
   edge_hmi_data:
+  edge_hmi_backups:

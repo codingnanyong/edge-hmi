@@ -118,7 +118,7 @@ export const SERVICE_OPERATIONS: Record<string, Array<{ method: 'GET' | 'POST' |
   sensor_status: [
     { method: 'GET', path: '/sensor_status', label: 'List' },
     { method: 'GET', path: '/sensor_status/{id}', label: 'Get' },
-    { method: 'GET', path: '/sensor_status/by-sensor/{sensor_id}', label: 'Get by sensor' },
+    { method: 'GET', path: '/sensor_status/by-sensor/{sensor_mst_id}', label: 'Get by sensor' },
     { method: 'POST', path: '/sensor_status', label: 'Create' },
     { method: 'PATCH', path: '/sensor_status/{id}', label: 'Update' },
     { method: 'DELETE', path: '/sensor_status/{id}', label: 'Delete' },

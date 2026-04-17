@@ -45,11 +45,15 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON SEQUENCES TO CURRENT_USER;
 -- 1.1 Line master
 CREATE TABLE IF NOT EXISTS line_mst (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    plant_id INTEGER NOT NULL,
+    factory_id TEXT NOT NULL,
     process_type VARCHAR(50),
     line_code VARCHAR(50) UNIQUE NOT NULL,
     line_name VARCHAR(200)
 );
 COMMENT ON TABLE line_mst IS 'Production line master';
+COMMENT ON COLUMN line_mst.plant_id IS 'Plant ID';
+COMMENT ON COLUMN line_mst.factory_id IS 'Factory ID';
 COMMENT ON COLUMN line_mst.process_type IS 'Process type (e.g. assembly, test)';
 COMMENT ON COLUMN line_mst.line_code IS 'Line identifier code';
 COMMENT ON COLUMN line_mst.line_name IS 'Line display name';
@@ -59,62 +63,74 @@ CREATE TABLE IF NOT EXISTS equip_mst (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     line_id INTEGER NOT NULL REFERENCES line_mst(id) ON DELETE CASCADE,
     equip_code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(200) NOT NULL,
-    type VARCHAR(100),
+    equip_name VARCHAR(200) NOT NULL,
+    equip_type VARCHAR(100),
     install_date DATE
 );
 COMMENT ON TABLE equip_mst IS 'Equipment master; belongs to a line';
 COMMENT ON COLUMN equip_mst.line_id IS 'Owning line (single/same/mixed line)';
 COMMENT ON COLUMN equip_mst.equip_code IS 'Equipment unique ID';
-COMMENT ON COLUMN equip_mst.name IS 'Equipment name';
-COMMENT ON COLUMN equip_mst.type IS 'Equipment type';
+COMMENT ON COLUMN equip_mst.equip_name IS 'Equipment name';
+COMMENT ON COLUMN equip_mst.equip_type IS 'Equipment type';
 COMMENT ON COLUMN equip_mst.install_date IS 'Equipment installation date';
 
 -- 1.3 Sensor master (Equip -> Sensor)
 CREATE TABLE IF NOT EXISTS sensor_mst (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE CASCADE,
-    sensor_code VARCHAR(50) NOT NULL,
+    sensor_name VARCHAR(50) NOT NULL,
     unit VARCHAR(20),
+    sampling_rate FLOAT,
+    is_active BOOLEAN DEFAULT TRUE,
     lsl_val FLOAT,
     usl_val FLOAT,
     lcl_val FLOAT,
     ucl_val FLOAT,
     is_golden_standard BOOLEAN DEFAULT FALSE,
-    CONSTRAINT uq_sensor_equip_code UNIQUE (equip_id, sensor_code)
+    mac_address VARCHAR(50),
+    CONSTRAINT uq_sensor_equip_name UNIQUE (equip_id, sensor_name)
 );
 COMMENT ON TABLE sensor_mst IS 'Sensor master; attached to equipment';
 COMMENT ON COLUMN sensor_mst.equip_id IS 'Parent equipment';
-COMMENT ON COLUMN sensor_mst.sensor_code IS 'Sensor code within equipment';
+COMMENT ON COLUMN sensor_mst.sensor_name IS 'Sensor code/name within equipment';
 COMMENT ON COLUMN sensor_mst.unit IS 'Measurement unit';
+COMMENT ON COLUMN sensor_mst.sampling_rate IS 'Sampling rate (e.g. Hz or samples per second)';
+COMMENT ON COLUMN sensor_mst.is_active IS 'Whether sensor is active for collection';
 COMMENT ON COLUMN sensor_mst.lsl_val IS 'Lower Spec Limit';
 COMMENT ON COLUMN sensor_mst.usl_val IS 'Upper Spec Limit';
 COMMENT ON COLUMN sensor_mst.lcl_val IS 'Lower Control Limit';
 COMMENT ON COLUMN sensor_mst.ucl_val IS 'Upper Control Limit';
 COMMENT ON COLUMN sensor_mst.is_golden_standard IS 'Golden standard sensor for comparison';
+COMMENT ON COLUMN sensor_mst.mac_address IS 'MAC address of the sensor';
 
 -- 1.4 Worker & shift config
 CREATE TABLE IF NOT EXISTS worker_mst (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     worker_code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(200) NOT NULL,
-    dept_name VARCHAR(100)
+    worker_name VARCHAR(200) NOT NULL,
+    dept_name VARCHAR(100),
+    rf_id VARCHAR(50)
 );
 COMMENT ON TABLE worker_mst IS 'Worker/operator master';
 COMMENT ON COLUMN worker_mst.worker_code IS 'Worker ID';
-COMMENT ON COLUMN worker_mst.name IS 'Worker full name';
+COMMENT ON COLUMN worker_mst.worker_name IS 'Worker full name';
 COMMENT ON COLUMN worker_mst.dept_name IS 'Department name';
+COMMENT ON COLUMN worker_mst.rf_id IS 'R/F (Tagging) ID';
 
 CREATE TABLE IF NOT EXISTS shift_cfg (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    work_date DATE NOT NULL,
     shift_name VARCHAR(50) NOT NULL,
     start_time TIME NOT NULL,
-    end_time TIME NOT NULL
+    end_time TIME NOT NULL,
+    CONSTRAINT uq_shift_cfg_work_date_shift_name UNIQUE (work_date, shift_name),
+    CONSTRAINT chk_shift_cfg_shift_name CHECK (shift_name IN ('S001', 'S002', 'S003'))
 );
-COMMENT ON TABLE shift_cfg IS 'Shift schedule definition';
-COMMENT ON COLUMN shift_cfg.shift_name IS 'Day, night, etc.';
-COMMENT ON COLUMN shift_cfg.start_time IS 'Shift start time';
-COMMENT ON COLUMN shift_cfg.end_time IS 'Shift end time';
+COMMENT ON TABLE shift_cfg IS 'Shift schedule definition per calendar date (unique shift_name per day)';
+COMMENT ON COLUMN shift_cfg.work_date IS 'Calendar date this shift belongs to';
+COMMENT ON COLUMN shift_cfg.shift_name IS 'Shift code (S001,S002,S003); unique per work_date';
+COMMENT ON COLUMN shift_cfg.start_time IS 'Shift start time (local); if end_time <= start_time, window crosses midnight (see fn_kpi_sum_calc)';
+COMMENT ON COLUMN shift_cfg.end_time IS 'Shift end time (local)';
 
 -- 1.5 Config (1:1 or N:1)
 CREATE TABLE IF NOT EXISTS kpi_cfg (
@@ -130,18 +146,25 @@ COMMENT ON COLUMN kpi_cfg.target_oee IS 'Target OEE';
 
 CREATE TABLE IF NOT EXISTS alarm_cfg (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    alarm_code VARCHAR(50) UNIQUE NOT NULL,
+    alarm_code VARCHAR(50) NOT NULL,
+    sensor_id INTEGER REFERENCES sensor_mst(id) ON DELETE SET NULL,
+    severity VARCHAR(50),
     lower_limit FLOAT,
     upper_limit FLOAT,
+    offset_val FLOAT,
     delay_time_sec INTEGER,
     alarm_type VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
-    description TEXT
+    description TEXT,
+    CONSTRAINT uq_alarm_cfg_code_sensor UNIQUE (alarm_code, sensor_id)
 );
-COMMENT ON TABLE alarm_cfg IS 'Alarm configuration: thresholds and behavior per code';
+COMMENT ON TABLE alarm_cfg IS 'Alarm configuration: thresholds and behavior per code (optionally per sensor)';
 COMMENT ON COLUMN alarm_cfg.alarm_code IS 'Alarm code identifier';
+COMMENT ON COLUMN alarm_cfg.sensor_id IS 'Optional: sensor this alarm is bound to (NULL = equipment-level)';
+COMMENT ON COLUMN alarm_cfg.severity IS 'Alarm severity (e.g. INFO, WARNING, CRITICAL)';
 COMMENT ON COLUMN alarm_cfg.lower_limit IS 'Lower threshold value (nullable: one-sided alarm)';
 COMMENT ON COLUMN alarm_cfg.upper_limit IS 'Upper threshold value (nullable: one-sided alarm)';
+COMMENT ON COLUMN alarm_cfg.offset_val IS 'Offset value for threshold calculation';
 COMMENT ON COLUMN alarm_cfg.delay_time_sec IS 'Delay before raising alarm (seconds)';
 COMMENT ON COLUMN alarm_cfg.alarm_type IS 'Alarm category (SPEC_OUT, CONTROL_OUT, SYSTEM, etc.)';
 COMMENT ON COLUMN alarm_cfg.is_active IS 'Whether this alarm configuration is currently enabled';
@@ -156,10 +179,27 @@ COMMENT ON TABLE maint_cfg IS 'Maintenance type definition';
 COMMENT ON COLUMN maint_cfg.maint_type IS 'Preventive, corrective, etc.';
 COMMENT ON COLUMN maint_cfg.description IS 'Maintenance description';
 
+-- 1.5a Shift assignment (must exist before work_order: FK shift_map)
+CREATE TABLE IF NOT EXISTS shift_map (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    work_date DATE NOT NULL,
+    shift_cfg_id INTEGER NOT NULL REFERENCES shift_cfg(id) ON DELETE RESTRICT,
+    worker_id INTEGER NOT NULL REFERENCES worker_mst(id) ON DELETE RESTRICT,
+    line_id INTEGER NOT NULL REFERENCES line_mst(id) ON DELETE RESTRICT,
+    equip_id INTEGER REFERENCES equip_mst(id) ON DELETE SET NULL
+);
+COMMENT ON TABLE shift_map IS 'Worker–shift–line–equip assignment per date';
+COMMENT ON COLUMN shift_map.work_date IS 'Assignment date';
+COMMENT ON COLUMN shift_map.shift_cfg_id IS 'Shift (shift_cfg)';
+COMMENT ON COLUMN shift_map.worker_id IS 'Worker';
+COMMENT ON COLUMN shift_map.line_id IS 'Line';
+COMMENT ON COLUMN shift_map.equip_id IS 'When assigned to specific equipment';
+
 -- 1.6 Work order (production order)
 CREATE TABLE IF NOT EXISTS work_order (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     order_no VARCHAR(50) UNIQUE NOT NULL,
+    shift_map_id INTEGER NOT NULL REFERENCES shift_map(id) ON DELETE RESTRICT,
     model_name VARCHAR(200),
     target_cnt INTEGER,
     sop_link VARCHAR(500),
@@ -168,6 +208,7 @@ CREATE TABLE IF NOT EXISTS work_order (
 );
 COMMENT ON TABLE work_order IS 'Production work order';
 COMMENT ON COLUMN work_order.order_no IS 'Work order number';
+COMMENT ON COLUMN work_order.shift_map_id IS 'Shift assignment (shift_map)';
 COMMENT ON COLUMN work_order.model_name IS 'Product model name';
 COMMENT ON COLUMN work_order.target_cnt IS 'Target production count';
 COMMENT ON COLUMN work_order.sop_link IS 'SOP document link';
@@ -201,6 +242,24 @@ COMMENT ON TABLE defect_code_mst IS 'Defect reason code definition';
 COMMENT ON COLUMN defect_code_mst.defect_code IS 'Defect code';
 COMMENT ON COLUMN defect_code_mst.reason_name IS 'Reason display name';
 COMMENT ON COLUMN defect_code_mst.category IS 'Defect category';
+
+-- 1.9 Sensor status (누적 히스토리: 센서별 매 수집 시점마다 1행, health_score 100점 차감 방식)
+CREATE TABLE IF NOT EXISTS sensor_status (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    sensor_id INTEGER NOT NULL REFERENCES sensor_mst(id) ON DELETE CASCADE,
+    conn_status VARCHAR(50) NOT NULL DEFAULT 'off',
+    last_seen TIMESTAMPTZ,
+    health_score FLOAT,
+    error_msg TEXT,
+    update_time TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
+);
+COMMENT ON TABLE sensor_status IS 'Cumulative sensor status history (multiple rows per sensor per capture time)';
+COMMENT ON COLUMN sensor_status.sensor_id IS 'Sensor';
+COMMENT ON COLUMN sensor_status.conn_status IS 'Connection status: on | off';
+COMMENT ON COLUMN sensor_status.last_seen IS 'Last time sensor data was received';
+COMMENT ON COLUMN sensor_status.health_score IS 'Health score 0–100, deducted from 100 for anomalies';
+COMMENT ON COLUMN sensor_status.error_msg IS 'Last error message if any';
+COMMENT ON COLUMN sensor_status.update_time IS '수집/기록 시점 (매분 등, 정렬·구간 조회용)';
 
 
 -- ----------------------------------------------------------------------------
@@ -294,14 +353,14 @@ CREATE TABLE IF NOT EXISTS alarm_his (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     time TIMESTAMPTZ NOT NULL,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
-    alarm_def_id INTEGER NOT NULL REFERENCES alarm_cfg(id) ON DELETE RESTRICT,
+    alarm_cfg_id INTEGER NOT NULL REFERENCES alarm_cfg(id) ON DELETE RESTRICT,
     trigger_val FLOAT,
     alarm_type VARCHAR(50)
 );
 COMMENT ON TABLE alarm_his IS 'Alarm event log';
 COMMENT ON COLUMN alarm_his.time IS 'Alarm timestamp';
 COMMENT ON COLUMN alarm_his.equip_id IS 'Equipment';
-COMMENT ON COLUMN alarm_his.alarm_def_id IS 'Alarm type (alarm_cfg)';
+COMMENT ON COLUMN alarm_his.alarm_cfg_id IS 'Alarm type (alarm_cfg)';
 COMMENT ON COLUMN alarm_his.trigger_val IS 'Measurement at alarm trigger';
 COMMENT ON COLUMN alarm_his.alarm_type IS 'SPEC_OUT, CONTROL_OUT, SYSTEM';
 
@@ -309,7 +368,7 @@ COMMENT ON COLUMN alarm_his.alarm_type IS 'SPEC_OUT, CONTROL_OUT, SYSTEM';
 CREATE TABLE IF NOT EXISTS maint_his (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     equip_id INTEGER NOT NULL REFERENCES equip_mst(id) ON DELETE RESTRICT,
-    maint_def_id INTEGER NOT NULL REFERENCES maint_cfg(id) ON DELETE RESTRICT,
+    maint_cfg_id INTEGER NOT NULL REFERENCES maint_cfg(id) ON DELETE RESTRICT,
     part_id INTEGER REFERENCES parts_mst(id) ON DELETE SET NULL,
     alarm_his_id INTEGER UNIQUE REFERENCES alarm_his(id) ON DELETE SET NULL,
     worker_id INTEGER REFERENCES worker_mst(id) ON DELETE SET NULL,
@@ -319,29 +378,13 @@ CREATE TABLE IF NOT EXISTS maint_his (
 );
 COMMENT ON TABLE maint_his IS 'Maintenance activity log';
 COMMENT ON COLUMN maint_his.equip_id IS 'Equipment';
-COMMENT ON COLUMN maint_his.maint_def_id IS 'Maintenance type (maint_cfg)';
+COMMENT ON COLUMN maint_his.maint_cfg_id IS 'Maintenance type (maint_cfg)';
 COMMENT ON COLUMN maint_his.part_id IS 'Replaced part (parts_mst)';
 COMMENT ON COLUMN maint_his.alarm_his_id IS 'Related alarm history';
 COMMENT ON COLUMN maint_his.worker_id IS 'Maintenance performer';
 COMMENT ON COLUMN maint_his.start_time IS 'Maintenance start';
 COMMENT ON COLUMN maint_his.end_time IS 'Maintenance end';
 COMMENT ON COLUMN maint_his.maint_desc IS 'Maintenance notes';
-
--- 2.6 Shift assignment (Date, Shift, Worker, Line, Equip)
-CREATE TABLE IF NOT EXISTS shift_map (
-    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    work_date DATE NOT NULL,
-    shift_def_id INTEGER NOT NULL REFERENCES shift_cfg(id) ON DELETE RESTRICT,
-    worker_id INTEGER NOT NULL REFERENCES worker_mst(id) ON DELETE RESTRICT,
-    line_id INTEGER NOT NULL REFERENCES line_mst(id) ON DELETE RESTRICT,
-    equip_id INTEGER REFERENCES equip_mst(id) ON DELETE SET NULL
-);
-COMMENT ON TABLE shift_map IS 'Worker–shift–line–equip assignment per date';
-COMMENT ON COLUMN shift_map.work_date IS 'Assignment date';
-COMMENT ON COLUMN shift_map.shift_def_id IS 'Shift (shift_cfg)';
-COMMENT ON COLUMN shift_map.worker_id IS 'Worker';
-COMMENT ON COLUMN shift_map.line_id IS 'Line';
-COMMENT ON COLUMN shift_map.equip_id IS 'When assigned to specific equipment';
 
 
 -- ----------------------------------------------------------------------------
@@ -352,7 +395,7 @@ COMMENT ON COLUMN shift_map.equip_id IS 'When assigned to specific equipment';
 CREATE TABLE IF NOT EXISTS kpi_sum (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     calc_date DATE NOT NULL,
-    shift_def_id INTEGER REFERENCES shift_cfg(id) ON DELETE SET NULL,
+    shift_cfg_id INTEGER REFERENCES shift_cfg(id) ON DELETE SET NULL,
     line_id INTEGER REFERENCES line_mst(id) ON DELETE SET NULL,
     equip_id INTEGER REFERENCES equip_mst(id) ON DELETE SET NULL,
     work_order_id INTEGER REFERENCES work_order(id) ON DELETE SET NULL,
@@ -366,7 +409,7 @@ CREATE TABLE IF NOT EXISTS kpi_sum (
 );
 COMMENT ON TABLE kpi_sum IS 'KPI aggregates by date/shift/line/equip/work order';
 COMMENT ON COLUMN kpi_sum.calc_date IS 'Aggregation date';
-COMMENT ON COLUMN kpi_sum.shift_def_id IS 'Shift (nullable)';
+COMMENT ON COLUMN kpi_sum.shift_cfg_id IS 'Shift (nullable)';
 COMMENT ON COLUMN kpi_sum.line_id IS 'Line (nullable)';
 COMMENT ON COLUMN kpi_sum.equip_id IS 'Equipment (nullable)';
 COMMENT ON COLUMN kpi_sum.work_order_id IS 'Work order (nullable)';
@@ -382,6 +425,8 @@ COMMENT ON COLUMN kpi_sum.uph IS 'Units per hour';
 -- [4. Indexes]
 -- ----------------------------------------------------------------------------
 
+-- sensor_status: lookups by sensor and capture time (history)
+CREATE INDEX IF NOT EXISTS idx_sensor_status_sensor_update ON sensor_status (sensor_id, update_time DESC);
 -- measurement: equip- and sensor-based time-range queries
 CREATE INDEX IF NOT EXISTS idx_measurement_equip_time ON measurement (equip_id, time DESC);
 CREATE INDEX IF NOT EXISTS idx_measurement_sensor_time ON measurement (sensor_id, time DESC);

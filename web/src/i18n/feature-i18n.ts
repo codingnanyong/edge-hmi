@@ -13,7 +13,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '1.2': {
     title: '작업자별 불량률',
     purpose: '작업자별 불량 수량 막대 차트',
-    logic: 'shift_map(work_date, worker_id, equip_id) → prod_his(equip_id, time) → 작업자별 defect_cnt 집계',
+    logic: 'shift_map(work_date, worker_mst_id, equip_mst_id) → prod_his(equip_mst_id, time) → 작업자별 defect_cnt 집계',
     formula: '불량률(%) = Σ(defect_cnt) / Σ(total_cnt) × 100 (작업자별)',
   },
   '1.4': {
@@ -24,14 +24,14 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   },
   '1.5': {
     title: '작업 지시',
-    purpose: '지시번호, 품목명/코드, 목표수량, 납기일, SOP',
-    logic: 'work_order 테이블의 target_cnt, sop_link 등 주요 필드 직접 매핑',
+    purpose: '지시번호, 모델명, 목표수량, 기간, SOP',
+    logic: 'work_order 테이블의 order_no, model_name, target_cnt, start_date/end_date, sop_link를 카드에 표시',
   },
   '1.6': {
     title: '핵심 KPI',
     purpose: 'OEE, 양품률, 생산진도, 사이클 타임',
-    logic: 'kpi_sum 집계 결과와 kpi_cfg 목표값 비교하여 달성률 산출',
-    formula: '달성률(%) = actual / target × 100',
+    logic: 'kpi_sum의 availability/performance/quality/oee/MTBF/MTTR/UPH 값과 kpi_cfg.target_oee를 비교하여 달성률 산출',
+    formula: 'OEE 달성률(%) = oee / target_oee × 100',
   },
   '1.7': {
     title: '단기 추세',
@@ -41,7 +41,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '1.8': {
     title: '설비 프로필',
     purpose: '기본 정보 (스펙, CMMS ID, 설치일)',
-    logic: 'equip_mst 테이블의 equip_code, name, install_date 등 마스터 데이터 로드',
+    logic: 'equip_mst 테이블의 equip_code, equip_name, install_date 등 마스터 데이터 로드',
   },
   '1.9': {
     title: '설비 알람 상태',
@@ -61,7 +61,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '2.3': {
     title: '다중 설비 비교',
     purpose: '설비 간 KPI/알람 비교',
-    logic: '여러 equip_id의 kpi_sum 데이터를 병렬 배치하여 편차 분석',
+    logic: '여러 equip_mst_id의 kpi_sum 데이터를 병렬 배치하여 편차 분석',
   },
   '2.4': {
     title: '다중 시계열 추세',
@@ -76,12 +76,12 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '2.6': {
     title: '골든 배치 비교',
     purpose: '표준 패턴 대비 실시간 데이터 비교',
-    logic: 'is_golden_standard=true 센서 데이터를 배경 레이어로, 실시간 measurement 중첩',
+    logic: 'sensor_mst.is_golden_standard=true 센서 집합을 골든 패턴으로 사용하고, 동일 센서의 실시간 measurement를 중첩 비교',
   },
   '2.7': {
     title: '핵심 공정 데이터 분석',
     purpose: '핫플레이트 온도, 몰드 진공, 호퍼 드라이 공정 시각화',
-    logic: '특정 공정 센서 그룹화하여 공정 단계별 정상 범위 이탈 여부 확인',
+    logic: 'sensor_mst에서 공정별 주요 센서를 그룹화하고 measurement 값을 센서 그룹 단위로 집계하여 정상 범위 이탈 여부 확인',
   },
   '3.3': {
     title: '부품 수명 주기',
@@ -97,7 +97,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '3.5': {
     title: '다운타임 분석',
     purpose: '파레토, MTBF, MTTR',
-    logic: 'alarm_his를 사유별 그룹화하여 빈도 계산, kpi_sum의 MTBF/MTTR 표시',
+    logic: 'alarm_his를 alarm_cfg.alarm_code 기준으로 그룹화하여 빈도 계산, kpi_sum의 MTBF/MTTR 표시',
   },
   '3.6': {
     title: 'PM 알림',
@@ -107,7 +107,7 @@ export const FEATURE_KO: Record<string, FeatureOverride> = {
   '3.7': {
     title: '센서 상태',
     purpose: '데이터 유효성 및 통신 상태',
-    logic: 'measurement 수집 주기 확인, 미수신 시 "통신 이상" 판단',
+    logic: 'sensor_mst.sampling_rate와 sensor_status.last_seen을 비교해 미수신 시 "통신 이상" 판단, health_score로 센서 데이터 품질 점수 표시',
   },
   '3.8': {
     title: '히팅선 단선',
@@ -148,31 +148,37 @@ export const FEATURE_EN: Record<string, FeatureOverride> = {
     note: 'status_code: Run, Stop, Fault. Merge alarm_his for alarm status.',
   },
   '1.5': { logic: 'Direct mapping of target_cnt, sop_link etc. from work_order table' },
-  '1.6': { logic: 'Compare kpi_sum results with kpi_cfg targets to calculate achievement rate' },
+  '1.6': {
+    logic:
+      'Use kpi_sum availability/performance/quality/oee/MTBF/MTTR/UPH plus kpi_cfg.target_oee to compute OEE achievement',
+  },
   '1.7': {
     title: 'Short-term Trend',
     purpose: 'Multi-time-series chart by period, worker, part, sensor (zoom/pan)',
     logic: 'Apply selected parameters as query filters for high-res time-series visualization',
   },
-  '1.8': { logic: 'Load master data (equip_code, name, install_date) from equip_mst' },
+  '1.8': { logic: 'Load master data (equip_code, equip_name, install_date) from equip_mst' },
   '1.9': { logic: 'Join alarm_his and alarm_cfg to map Severity and details' },
   '2.1': { logic: 'Compare measurement current with standard pattern for threshold deviation' },
   '2.2': { logic: 'Arrange equip_status chronologically as Gantt chart' },
-  '2.3': { logic: 'Arrange kpi_sum for multiple equip_ids in parallel for deviation analysis' },
+  '2.3': { logic: 'Arrange kpi_sum for multiple equip_mst_ids in parallel for deviation analysis' },
   '2.4': { logic: 'Apply selected parameters as query filters for high-res time-series viz' },
   '2.5': {
     logic: 'Track defect rate change before/after worker (shift_map) or parts (parts_mst) change',
   },
-  '2.6': {
-    logic: 'Overlay real-time measurement on sensor data with is_golden_standard=true',
-  },
+  '2.6': { logic: 'Use sensor_mst.is_golden_standard=true sensors as golden layer and overlay current measurement' },
   '2.7': {
-    logic: 'Group process sensors to check deviation from normal range per process step',
+    logic: 'Group key process sensors from sensor_mst and aggregate measurement values to check deviation from ranges',
   },
   '3.4': { logic: 'Calculate duration from alarm_his.time to maint_his.end_time' },
-  '3.5': { logic: 'Group alarm_his by reason for frequency; show MTBF/MTTR from kpi_sum' },
+  '3.5': {
+    logic: 'Group alarm_his by alarm_cfg.alarm_code for frequency; show MTBF/MTTR from kpi_sum',
+  },
   '3.6': { logic: 'Trigger alert when parts usage >90% or scheduled maintenance date reached' },
-  '3.7': { logic: 'Check measurement collection cycle; judge "comm abnormal" if no data' },
+  '3.7': {
+    logic:
+      'Compare sensor_mst.sampling_rate with sensor_status.last_seen and use health_score (0–100) as sensor data quality score',
+  },
   '3.8': {
     title: 'Heating Wire Disconnection',
     purpose: 'Display disconnection count per Station on layout',

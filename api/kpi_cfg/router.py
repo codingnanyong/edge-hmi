@@ -25,7 +25,7 @@ def get(id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=KpiCfgRead, status_code=201)
 def create(p: KpiCfgCreate, db: Session = Depends(get_db)):
     row = KpiCfgModel(
-        equip_id=p.equip_id,
+        equip_mst_id=p.equip_mst_id,
         std_cycle_time=p.std_cycle_time,
         target_oee=p.target_oee,
     )

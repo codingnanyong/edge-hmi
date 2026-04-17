@@ -3,19 +3,12 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class EquipStatusBase(BaseModel):
-    """Represents equip_status intervals (not raw events)."""
+class EquipStatusRead(BaseModel):
+    """equip_status interval; PK (id, start_time); equip_id maps to equip_mst_id on ORM."""
 
-    equip_id: int
+    id: int
+    equip_mst_id: int
     status_code: str | None = None
     start_time: datetime
     end_time: datetime | None = None
-
-
-class EquipStatusCreate(EquipStatusBase):
-    pass
-
-
-class EquipStatusRead(EquipStatusBase):
-    id: int
     model_config = ConfigDict(from_attributes=True)

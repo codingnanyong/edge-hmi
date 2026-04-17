@@ -6,10 +6,10 @@ set -e
 # ============================================================================
 # Pushes both [tag] and latest; latest is always updated to this build.
 # Usage: ./scripts/push-to-registry.sh [registry-url] [tag]
-# Example: ./scripts/push-to-registry.sh 203.228.107.184:5000 v1.0
+# Example: ./scripts/push-to-registry.sh ip address:port v1.0
 # ============================================================================
 
-REGISTRY_URL="${1:?Usage: $0 <REGISTRY_HOST>:<PORT> [tag]}"
+REGISTRY_URL="${1:-ip address:port}"
 IMAGE_TAG="${2:-latest}"
 IMAGE_NAME="btx/edge-hmi-db"
 FULL_IMAGE="${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
@@ -26,7 +26,11 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_DIR}"
 
 echo "📋 Checking required files..."
-for f in dockerfile sql/init-db.sql sql/equip-status-fn.sql sql/kpi-scheduler.sql; do
+for f in dockerfile \
+    sql/init-db.sql \
+    sql/equip-status-fn.sql \
+    sql/kpi-scheduler.sql \
+    sql/shift-cfg-daily.sql; do
     if [ ! -e "$f" ]; then
         echo "❌ Missing: $f"
         exit 1
@@ -74,4 +78,6 @@ echo ""
 echo "Pull: docker pull ${FULL_IMAGE}"
 echo "      docker pull ${LATEST_IMAGE}"
 echo "Create .env (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA, TZ) on target."
+echo "pg_cron (이미지 기본): 0 1 * * * fn_kpi_sum_calc(전일), 0 23 * * * fn_shift_cfg_daily"
+echo "Manual shift: psql -f /opt/edge-hmi/sql/shift-cfg-daily.sql"
 echo ""

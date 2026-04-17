@@ -4,10 +4,10 @@ from pydantic import BaseModel, ConfigDict
 
 
 class EquipMstBase(BaseModel):
-    line_id: int
+    line_mst_id: int
     equip_code: str
-    name: str
-    type: str | None = None
+    equip_name: str
+    equip_type: str | None = None
     install_date: date | None = None
 
 
@@ -16,10 +16,10 @@ class EquipMstCreate(EquipMstBase):
 
 
 class EquipMstUpdate(BaseModel):
-    line_id: int | None = None
+    line_mst_id: int | None = None
     equip_code: str | None = None
-    name: str | None = None
-    type: str | None = None
+    equip_name: str | None = None
+    equip_type: str | None = None
     install_date: date | None = None
 
 
